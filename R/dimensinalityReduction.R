@@ -1,6 +1,6 @@
-#' Non-Negative Matrix Factorization (NFM) 
+#' Non-Negative Matrix Factorization (NMF) 
 #'
-#' Reduce dimensionality of the single cell dataset using Non-Negative Matrix Factorization (NFM)
+#' Reduce dimensionality of the single cell dataset using Non-Negative Matrix Factorization (NMF)
 #' 
 #' @param data list; GFICF object
 #' @param dim integer; Number of dimension which to reduce the dataset.
@@ -13,11 +13,11 @@
 #' @param plot.odgenes boolean; Show significant overdispersed genes respect to ICF values.
 #' @param ... Additional arguments to pass to nfm call (see ?RcppML::nmf).
 #' @return The updated gficf object.
-#' @importFrom RSpectra svds
 #' @importFrom RcppML nmf
+#' @import Matrix
 #' 
 #' @export
-runNFM = function(data,dim=NULL,var.scale=F,seed=180582,use.odgenes=F,n.odgenes=NULL,plot.odgenes=F, ...)
+runNMF = function(data,dim=NULL,var.scale=F,seed=180582,use.odgenes=F,n.odgenes=NULL,plot.odgenes=F, ...)
 {
   if(use.odgenes & is.null(data$rawCounts)) {stop("Raw Counts absent! Please run gficf normalization with storeRaw = T")}
   
