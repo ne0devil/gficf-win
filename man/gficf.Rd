@@ -6,25 +6,34 @@
 \usage{
 gficf(
   M,
-  cell_proportion_max = 1,
-  cell_proportion_min = 0.05,
+  cell_count_cutoff = 5,
+  cell_percentage_cutoff2 = 0.03,
+  nonz_mean_cutoff = 1.12,
   storeRaw = TRUE,
-  normalize = TRUE,
-  verbose = TRUE
+  batches = NULL,
+  groups = NULL,
+  verbose = TRUE,
+  ...
 )
 }
 \arguments{
 \item{M}{Matrix; UMI cell count matrix}
 
-\item{cell_proportion_max}{integer; Remove genes present in more then to the specifided proportion (0,1). Default 1.}
+\item{cell_count_cutoff}{numeric; All genes detected in less than cell_count_cutoff cells will be excluded (default 5).}
 
-\item{cell_proportion_min}{integer; Remove genes present in less then or equal to the specifided proportion (0,1). Default is 0.05 (i.e. 5 percent).}
+\item{cell_percentage_cutoff2}{numeric; All genes detected in at least this percentage of cells will be included (default 0.03, i.e. 3% of cells).}
+
+\item{nonz_mean_cutoff}{numeric genes detected in the number of cells between the above mentioned cutoffs are selected only when their average expression in non-zero cells is above this cutoff (default 1.12).}
 
 \item{storeRaw}{logical; Store UMI counts.}
 
-\item{normalize}{logical; Rescale UMI counts before applay GFICF. Recaling is done using EdgeR normalization.}
+\item{batches}{vector; Vector / factor for batch.}
+
+\item{groups}{vector; Vector / factor for biological condition of interest.}
 
 \item{verbose}{boolean; Increase verbosity.}
+
+\item{...}{Additional arguments to pass to ComBat_seq call.}
 }
 \value{
 The updated gficf object.

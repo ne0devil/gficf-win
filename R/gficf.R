@@ -31,18 +31,20 @@ gficf = function(M,cell_count_cutoff=5,cell_percentage_cutoff2=0.03,nonz_mean_cu
   gc()
   
   data$param <- list()
-  data$param$cell_proportion_max = cell_proportion_max
-  data$param$cell_proportion_min = cell_proportion_min
-  data$param$normalized = normalize
+  data$param$cell_count_cutoff = cell_count_cutoff
+  data$param$cell_percentage_cutoff2 = cell_percentage_cutoff2
+  data$param$nonz_mean_cutoff = nonz_mean_cutoff
+  data$param$normalized = TRUE
   return(data)
 }
 
 #' @import Matrix
 #' @importFrom edgeR DGEList calcNormFactors cpm
 #' 
-normCounts = function(M,data,cell_count_cutoff=5,cell_percentage_cutoff2=0.03,nonz_mean_cutoff=1.12,correctBatch=FALSE,verbose=TRUE, ...)
+normCounts = function(M,data,cell_count_cutoff=5,cell_percentage_cutoff2=0.03,nonz_mean_cutoff=1.12,batches=NULL,groups=NULL,verbose=TRUE, ...)
 {
   ix = Matrix::rowSums(M!=0)
+  tsmessage("Gene filtering..",verbose = verbose)
   M = filter_genes_cell2loc_style(data = M,cell_count_cutoff,cell_percentage_cutoff2,nonz_mean_cutoff)
   if(!is.null(batches)){
     tsmessage("Correcting batches..",verbose = verbose)
