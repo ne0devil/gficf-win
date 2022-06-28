@@ -7,17 +7,22 @@
 #' to a document, genes analogous to words and gene counts to be analogous of the word’s occurrence in a document.
 #' 
 #' @param M Matrix; UMI cell count matrix
-#' @param cell_proportion_max integer; Remove genes present in more then to the specifided proportion (0,1). Default 1.
-#' @param cell_proportion_min integer; Remove genes present in less then or equal to the specifided proportion (0,1). Default is 0.05 (i.e. 5 percent).
+#' @param cell_count_cutoff numeric; All genes detected in less than cell_count_cutoff cells will be excluded (default 5).
+#' @param cell_percentage_cutoff2 numeric; All genes detected in at least this percentage of cells will be included (default 0.03, i.e. 3% of cells).
+#' @param nonz_mean_cutoff numeric genes detected in the number of cells between the above mentioned cutoffs are selected only when their average expression in non-zero cells is above this cutoff (default 1.12).
 #' @param storeRaw logical; Store UMI counts.
-#' @param  normalize logical; Rescale UMI counts before applay GFICF. Recaling is done using EdgeR normalization.
+#' @param batches vector; Vector / factor for batch.
+#' @param groups vector; Vector / factor for biological condition of interest.
 #' @param verbose boolean; Increase verbosity.
+#' @param ... Additional arguments to pass to ComBat_seq call.
 #' @return The updated gficf object.
+#' @importFrom sva ComBat_seq
+#' 
 #' @export
-gficf = function(M,cell_proportion_max = 1,cell_proportion_min = 0.05,storeRaw=TRUE,normalize=TRUE,verbose=TRUE)
+gficf = function(M,cell_count_cutoff=5,cell_percentage_cutoff2=0.03,nonz_mean_cutoff=1.12,storeRaw=TRUE,batches=NULL,groups=NULL,verbose=TRUE, ...)
 {
   data = list()
-  M = normCounts(M,doc_proportion_max = cell_proportion_max,doc_proportion_min = cell_proportion_min,normalizeCounts=normalize,verbose=verbose)
+  M = normCounts(M,data,cell_count_cutoff,cell_percentage_cutoff2,nonz_mean_cutoff,normalizeCounts=normalize,verbose=verbose, ...)
   data$gficf = tf(M,verbose = verbose)
   if (storeRaw) {data$rawCounts=M;rm(M)}
   data$w = getIdfW(data$gficf,verbose = verbose)
@@ -35,16 +40,16 @@ gficf = function(M,cell_proportion_max = 1,cell_proportion_min = 0.05,storeRaw=T
 #' @import Matrix
 #' @importFrom edgeR DGEList calcNormFactors cpm
 #' 
-normCounts = function(M,doc_proportion_max = 1,doc_proportion_min = 0.01,normalizeCounts=FALSE,verbose=TRUE)
+normCounts = function(M,data,cell_count_cutoff=5,cell_percentage_cutoff2=0.03,nonz_mean_cutoff=1.12,correctBatch=FALSE,verbose=TRUE, ...)
 {
   ix = Matrix::rowSums(M!=0)
-  M = M[ix>ncol(M)*doc_proportion_min & ix<=ncol(M)*doc_proportion_max,]
-  
-  if (normalizeCounts) 
-  {
-    tsmessage("Normalize counts..",verbose = verbose)
-    M <- Matrix::Matrix(cpm(calcNormFactors(DGEList(counts=M),normalized.lib.sizes = T)),sparse = T) 
-  } 
+  M = filter_genes_cell2loc_style(data = M,cell_count_cutoff,cell_percentage_cutoff2,nonz_mean_cutoff)
+  if(!is.null(batches)){
+    tsmessage("Correcting batches..",verbose = verbose)
+    sva::ComBat_seq(counts = M,batch = batches,group = groups, ...)
+  }
+  tsmessage("Normalize counts..",verbose = verbose)
+  M <- Matrix::Matrix(cpm(calcNormFactors(DGEList(counts=M),normalized.lib.sizes = T)),sparse = T) 
   
   return(M)
 }

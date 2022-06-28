@@ -97,3 +97,15 @@ progress_for <- function(n, tot,display) {
     message("|")
   }
 }
+
+# Filter cells with a cell2location style
+# https://cell2location.readthedocs.io/en/latest/cell2location.utils.filtering.html
+filter_genes_cell2loc_style = function(data,cell_count_cutoff=5,cell_percentage_cutoff2=0.03,nonz_mean_cutoff=1.12)
+{
+  data = data[Matrix::rowSums(data)>0,]
+  csums = Matrix::rowSums(data!=0)
+  gene_to_remove = csums <= cell_count_cutoff |  csums/ncol(data) <= cell_percentage_cutoff2
+  gene_to_remove_step02= apply(data[gene_to_remove,], 1, function(x,th=nonz_mean_cutoff) mean(x[x!=0])<=th)
+  data = data[!rownames(data)%in%names(gene_to_remove_step02)[gene_to_remove_step02],]
+  return(data)
+}
