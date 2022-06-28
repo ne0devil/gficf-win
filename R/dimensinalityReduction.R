@@ -1,6 +1,6 @@
-#' Latent Semantic Analysis (LSA) 
+#' Non-Negative Matrix Factorization (NFM) 
 #'
-#' Reduce dimensionality of the single cell dataset using Latent Semantic Analysis (LSA)
+#' Reduce dimensionality of the single cell dataset using Non-Negative Matrix Factorization (NFM)
 #' 
 #' @param data list; GFICF object
 #' @param dim integer; Number of dimension which to reduce the dataset.
@@ -11,12 +11,13 @@
 #' @param use.odgenes boolean; Use significant overdispersed genes respect to ICF values (highly experimental!).
 #' @param n.odgenes integer; Number of overdispersed genes to use (highly experimental!). A good choise seems to be usually between 1000 and 3000.
 #' @param plot.odgenes boolean; Show significant overdispersed genes respect to ICF values.
+#' @param ... Additional arguments to pass to nfm call (see ?RcppML::nmf).
 #' @return The updated gficf object.
 #' @importFrom RSpectra svds
-#' @importFrom rsvd rsvd
+#' @importFrom RcppML nmf
 #' 
 #' @export
-runLSA = function(data,dim=NULL,var.scale=F,centre=F,randomized=T,seed=180582,use.odgenes=F,n.odgenes=NULL,plot.odgenes=F)
+runNFM = function(data,dim=NULL,var.scale=F,seed=180582,use.odgenes=F,n.odgenes=NULL,plot.odgenes=F, ...)
 {
   if(use.odgenes & is.null(data$rawCounts)) {stop("Raw Counts absent! Please run gficf normalization with storeRaw = T")}
   
@@ -30,9 +31,7 @@ runLSA = function(data,dim=NULL,var.scale=F,centre=F,randomized=T,seed=180582,us
   set.seed(seed)
   
   data$pca = list()
-  data$pca$cells = t(data$gficf)
-  #data$pca$cells = scaleMatrix(data$pca$cells,rescale,centre)
-  
+
   if(use.odgenes) {
     overD=suppressWarnings(findOverDispersed(data = data,alpha = 0.1,verbose = F,plot = plot.odgenes))
     odgenes <- rownames(overD[overD$lpa<log(0.1),])
@@ -43,22 +42,34 @@ runLSA = function(data,dim=NULL,var.scale=F,centre=F,randomized=T,seed=180582,us
         odgenes <- odgenes[1:n.odgenes]
       }
     }
-    data$pca$cells = data$pca$cells[,odgenes]
+    data$pca$cells = t(data$gficf)[,odgenes]
     data$pca$odgenes = overD
     tsmessage("... using ",length(odgenes)," OD genes",verbose = T)
   } 
   
   if(var.scale) {
-    if(!use.odgenes) {overD=suppressWarnings(findOverDispersed(data = data,alpha = 0.1,verbose = F))}
+    if(!use.odgenes) {
+      overD=suppressWarnings(findOverDispersed(data = data,alpha = 0.1,verbose = F))
+      data$pca$cells = t(data$gficf)
+    }
     data$pca$cells@x <- data$pca$cells@x*rep(overD[colnames(data$pca$cells),'gsf'],diff(data$pca$cells@p))
     data$pca$odgenes = overD
   }
   
-  if (randomized) {ppk<- rsvd::rsvd(data$pca$cells,k=dim)} else {ppk<- RSpectra::svds(data$pca$cells,k=dim)}
-  data$pca$cells <- ppk$u %*% base::diag(x = ppk$d)
+  if (is.null(data$pca$cells)){
+    tsmessage("Performing NFM..")
+    nfm = RcppML::nmf(A = data$gficf,k = dim, ...)
+  } else {
+    nfm = RcppML::nmf(A = t(data$pca$cells),k = dim, ...)
+  }
+  
+  data$pca$cells <- t(nfm$h)
+  data$pca$genes <- nfm$w
+  rm(nfm);gc()
   data$pca$centre <- F
   data$pca$rescale <- var.scale
-  data$pca$genes <- ppk$v
+  data$pca$type = "NFM"
+  
   if(use.odgenes) {rownames(data$pca$genes)=odgenes} else {rownames(data$pca$genes) = rownames(data$gficf)}
   rownames(data$pca$cells) = colnames(data$gficf)
   return(data)
@@ -98,8 +109,7 @@ runPCA = function(data,dim=NULL,var.scale=F,centre=F,randomized=T,seed=180582,us
   
   data$pca = list()
   data$pca$cells = t(data$gficf)
-  #data$pca$cells = scaleMatrix(data$pca$cells,F,F)
-  
+
   if(use.odgenes) {
     overD=suppressWarnings(findOverDispersed(data = data,alpha = 0.1,verbose = F,plot = plot.odgenes))
     odgenes <- rownames(overD[overD$lpa<log(0.1),])
@@ -126,6 +136,7 @@ runPCA = function(data,dim=NULL,var.scale=F,centre=F,randomized=T,seed=180582,us
   data$pca$centre <- centre
   data$pca$rescale <- var.scale
   data$pca$genes <- x$rotation
+  data$pca$type = "PCA"
   if(use.odgenes) {rownames(data$pca$genes)=odgenes} else {rownames(data$pca$genes) = rownames(data$gficf)}
   rownames(data$pca$cells) = colnames(data$gficf)
   colnames(data$pca$cells) = colnames(data$pca$genes) = paste("C",1:dim,sep = "")
