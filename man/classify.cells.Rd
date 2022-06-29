@@ -4,7 +4,7 @@
 \alias{classify.cells}
 \title{Classify New Embedded Cells}
 \usage{
-classify.cells(data, classes, k = 7, seed = 18051982, method = "PCA")
+classify.cells(data, classes, k = 7, seed = 18051982, method = "embedded")
 }
 \arguments{
 \item{data}{list; GFICF object}
@@ -15,7 +15,7 @@ classify.cells(data, classes, k = 7, seed = 18051982, method = "PCA")
 
 \item{seed}{integer; Initial seed to use.}
 
-\item{method}{chareachters; Which space in which apply KNN. Default is PCA but embedded usually gives better results.}
+\item{method}{chareachters; Which space in which apply KNN (subspace or embedded). Default is embedded (i.e., umap/tsne space) because usually gives better results then the subspace PCA/NMF.}
 }
 \value{
 A dataframe containing cell id and predicted classes.

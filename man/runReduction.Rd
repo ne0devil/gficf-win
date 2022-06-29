@@ -9,7 +9,6 @@ runReduction(
   reduction = "tumap",
   nt = 2,
   seed = 18051982,
-  ret_model_pred = T,
   verbose = T,
   ...
 )
@@ -28,8 +27,6 @@ runReduction(
 
 \item{seed}{integer; Initial seed to use.}
 
-\item{ret_model_pred}{boolean; If true, the umap model is retained to be used for prediction.}
-
 \item{verbose}{boolean; Icrease verbosity.}
 
 \item{...}{Additional arguments to pass to Rtsne/umap/tumap call.}
@@ -38,6 +35,6 @@ runReduction(
 The updated gficf object.
 }
 \description{
-Run t-SNE or UMAP or t-UMAP dimensionality reduction on selected features from PCA or LSA.
+Run t-SNE or UMAP or t-UMAP dimensionality reduction on selected features from PCA or NMF.
 See ?umap or ?Rtsne for additional parameter to use.
 }

@@ -145,7 +145,7 @@ runPCA = function(data,dim=NULL,var.scale=F,centre=F,randomized=T,seed=180582,us
   
 #' Dimensionality reduction
 #'
-#' Run t-SNE or UMAP or t-UMAP dimensionality reduction on selected features from PCA or LSA.
+#' Run t-SNE or UMAP or t-UMAP dimensionality reduction on selected features from PCA or NMF.
 #' See ?umap or ?Rtsne for additional parameter to use. 
 #' 
 #' @param data list; GFICF object
@@ -157,7 +157,6 @@ runPCA = function(data,dim=NULL,var.scale=F,centre=F,randomized=T,seed=180582,us
 #' }
 #' @param nt integer; Number of thread to use (default 2).
 #' @param seed integer; Initial seed to use.
-#' @param ret_model_pred boolean; If true, the umap model is retained to be used for prediction.
 #' @param verbose boolean; Icrease verbosity. 
 #' @param ... Additional arguments to pass to Rtsne/umap/tumap call.
 #' @return The updated gficf object.
@@ -165,7 +164,7 @@ runPCA = function(data,dim=NULL,var.scale=F,centre=F,randomized=T,seed=180582,us
 #' @importFrom Rtsne Rtsne
 #' 
 #' @export
-runReduction = function(data,reduction="tumap",nt=2,seed=18051982, ret_model_pred = T,verbose=T, ...)
+runReduction = function(data,reduction="tumap",nt=2,seed=18051982, verbose=T, ...)
 {
 
   reduction = base::match.arg(arg = reduction,choices = c("umap","tumap","tsne"),several.ok = F)
@@ -174,12 +173,12 @@ runReduction = function(data,reduction="tumap",nt=2,seed=18051982, ret_model_pre
   if (!is.null(data$pca))
   {
     if(reduction=="tumap"){
-      data$uwot = uwot::tumap(X = data$pca$cells,scale = F,n_threads = nt,verbose = verbose,ret_model = ret_model_pred, ...)
+      data$uwot = uwot::tumap(X = data$pca$cells,scale = F,n_threads = nt,verbose = verbose,ret_model = T, ...)
       data$embedded = base::as.data.frame(data$uwot$embedding)
     }
     
     if(reduction=="umap"){
-      data$uwot = uwot::umap(X = data$pca$cells, scale = F,n_threads = nt,verbose = verbose, ret_model = ret_model_pred, ...)
+      data$uwot = uwot::umap(X = data$pca$cells, scale = F,n_threads = nt,verbose = verbose, ret_model = T, ...)
       data$embedded = base::as.data.frame(data$uwot$embedding)
     }
     

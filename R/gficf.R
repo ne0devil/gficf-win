@@ -34,7 +34,7 @@ gficf = function(M,cell_count_cutoff=5,cell_percentage_cutoff2=0.03,nonz_mean_cu
   data$param$cell_count_cutoff = cell_count_cutoff
   data$param$cell_percentage_cutoff2 = cell_percentage_cutoff2
   data$param$nonz_mean_cutoff = nonz_mean_cutoff
-  data$param$normalized = TRUE
+  data$param$normalized = TRUE # keep it for legacy
   return(data)
 }
 
@@ -51,7 +51,7 @@ normCounts = function(M,data,cell_count_cutoff=5,cell_percentage_cutoff2=0.03,no
     sva::ComBat_seq(counts = M,batch = batches,group = groups, ...)
   }
   tsmessage("Normalize counts..",verbose = verbose)
-  M <- Matrix::Matrix(cpm(calcNormFactors(DGEList(counts=M),normalized.lib.sizes = T)),sparse = T) 
+  M <- Matrix::Matrix(edgeR::cpm(edgeR::calcNormFactors(edgeR::DGEList(counts=M),normalized.lib.sizes = T)),sparse = T) 
   
   return(M)
 }

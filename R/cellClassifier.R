@@ -7,18 +7,18 @@
 #' @param classes chareachters; Classes of aready exsiting cells in the order of thay are in colnames(data$gficf).
 #' @param k integer; Number of K-nn to use for classification. Odd number less than 30 are prefered.
 #' @param seed integer; Initial seed to use.
-#' @param method chareachters; Which space in which apply KNN. Default is PCA but embedded usually gives better results.
+#' @param method chareachters; Which space in which apply KNN (subspace or embedded). Default is embedded (i.e., umap/tsne space) because usually gives better results then the subspace PCA/NMF.
 #' @return A dataframe containing cell id and predicted classes.
 #' @importFrom class knn
 #' 
 #' @export
-classify.cells = function(data,classes,k=7,seed=18051982,method="PCA")
+classify.cells = function(data,classes,k=7,seed=18051982,method="embedded")
 {
-  method = base::match.arg(arg = method,choices = c("PCA","embedded"),several.ok = F)
+  method = base::match.arg(arg = method,choices = c("subspace","embedded"),several.ok = F)
   if (sum(colnames(data$embedded)%in%"predicted") == 0) {stop("Please embed first new cells!")}
   set.seed(seed)
   classes = factor(as.character(classes))
-  if (method%in%"PCA")
+  if (method%in%"subspace")
   {
     res = class::knn(data$pca$cells,data$pca$pred,classes,k = k,prob = F) 
   } else {
@@ -42,18 +42,24 @@ classify.cells = function(data,classes,k=7,seed=18051982,method="PCA")
 #' @return The updated gficf object.
 #' @import Matrix
 #' @import uwot
+#' @importFrom edgeR DGEList calcNormFactors cpm
 #' @importFrom Rtsne Rtsne
+#' @importFrom RcppML nmf
 #' 
 #' @export
 embedNewCells = function(data,x,nt=2,seed=18051982, verbose=TRUE, ...)
 {
-  x = normCounts(x[rownames(x)%in% names(data$w),],doc_proportion_max = 2,doc_proportion_min = 0,normalizeCounts = data$param$normalized,verbose=verbose)
+  tsmessage("Gene filtering..",verbose = verbose)
+  g = union(rownames(filter_genes_cell2loc_style(data = x,data$param$cell_count_cutoff,data$param$cell_percentage_cutoff2,data$param$nonz_mean_cutoff)),rownames(data$gficf))
+  x = x[rownames(x)%in%g,]
+  rm(g)
+  
+  tsmessage("Normalize counts..",verbose = verbose)
+  x <- Matrix::Matrix(edgeR::cpm(edgeR::calcNormFactors(edgeR::DGEList(counts=x),normalized.lib.sizes = T)),sparse = T)
+  
   x = tf(x,verbose=verbose)
   x = idf(x,w = data$w,verbose=verbose)
   x = t(l.norm(t(x),norm = "l2",verbose=verbose))
-  x = as.matrix(scaleMatrix(t(x), data$pca$rescale,data$pca$centre))
-  
-  if(ncol(x)!=nrow(data$pca$genes)) {x = x[,rownames(data$pca$genes)]}
   
   if(!is.null(data$pca$odgenes) & data$pca$rescale)
   {
@@ -61,7 +67,13 @@ embedNewCells = function(data,x,nt=2,seed=18051982, verbose=TRUE, ...)
     x@x <- x@x*rep(data$pca$odgenes[colnames(x),'gsf'],diff(x@p))
   }
   
-  x = x %*% data$pca$genes
+  if (data$pca$type=="NFM") {
+    cells = colnames(x)
+    x = t(RcppML::project(A = x,w = data$pca$genes,mask_zeros = T))
+    rownames(x) = cells; rm(cells)
+  } else {
+    x = t(x) %*% data$pca$genes
+  }
   gc()
   
   if(data$reduction%in%c("tumap","umap")) {
