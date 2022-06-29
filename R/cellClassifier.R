@@ -69,7 +69,7 @@ embedNewCells = function(data,x,nt=2,seed=18051982, verbose=TRUE, ...)
   
   if (data$pca$type=="NFM") {
     cells = colnames(x)
-    x = t(RcppML::project(A = x,w = data$pca$genes,mask_zeros = T))
+    x = t(RcppML::project(A = x,w = data$pca$genes))
     rownames(x) = cells; rm(cells)
   } else {
     x = t(x) %*% data$pca$genes
