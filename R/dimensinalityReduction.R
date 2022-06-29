@@ -58,9 +58,9 @@ runNMF = function(data,dim=NULL,var.scale=F,seed=180582,use.odgenes=F,n.odgenes=
   
   if (is.null(data$pca$cells)){
     tsmessage("Performing NFM..")
-    nfm = RcppML::nmf(A = data$gficf,k = dim, ...)
+    nfm = RcppML::nmf(data$gficf,k = dim, ...)
   } else {
-    nfm = RcppML::nmf(A = t(data$pca$cells),k = dim, ...)
+    nfm = RcppML::nmf(t(data$pca$cells),k = dim, ...)
   }
   
   data$pca$cells <- t(nfm$h)

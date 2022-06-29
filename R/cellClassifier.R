@@ -44,7 +44,7 @@ classify.cells = function(data,classes,k=7,seed=18051982,method="embedded")
 #' @import uwot
 #' @importFrom edgeR DGEList calcNormFactors cpm
 #' @importFrom Rtsne Rtsne
-#' @importFrom RcppML nmf
+#' @importFrom RcppML predict.nmf
 #' 
 #' @export
 embedNewCells = function(data,x,nt=2,seed=18051982, verbose=TRUE, ...)
@@ -69,8 +69,8 @@ embedNewCells = function(data,x,nt=2,seed=18051982, verbose=TRUE, ...)
   
   if (data$pca$type=="NFM") {
     cells = colnames(x)
-    x = t(RcppML::project(A = x,w = data$pca$genes))
-    rownames(x) = cells; rm(cells)
+    x = t(RcppML::predict.nmf(w = data$pca$genes,data = x))
+    rownames(x) = cells; rm(cells,h,w)
   } else {
     x = t(x) %*% data$pca$genes
   }
