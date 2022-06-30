@@ -155,6 +155,7 @@ runGSEA <- function(data,gmt.file,nsim=1000,convertToEns=T,convertHu2Mm=F,nt=2,m
 #' @param verbose boolean; Show the progress bar.
 #' @param seed integer; Seed to use for random number generation.
 #' @param nmf.k numeric; Rank of NMF.
+#' @param fdr.th numeric; FDR threshold for GSEA.
 #' @return The updated gficf object.
 #' @importFrom fgsea fgsea
 #' @import fastmatch
@@ -162,7 +163,7 @@ runGSEA <- function(data,gmt.file,nsim=1000,convertToEns=T,convertHu2Mm=F,nt=2,m
 #' @import utils
 #' @import pointr
 #' @export
-runScGSEA <- function(data,gmt.file,nsim=1000,convertToEns=T,convertHu2Mm=F,nt=2,minSize=15,maxSize=Inf,verbose=TRUE,seed=180582,nmf.k=100)
+runScGSEA <- function(data,gmt.file,nsim=1000,convertToEns=T,convertHu2Mm=F,nt=2,minSize=15,maxSize=Inf,verbose=TRUE,seed=180582,nmf.k=100,fdr.th=0.05)
 {
   if (is.null(data$scgsea))
   {
@@ -206,14 +207,15 @@ runScGSEA <- function(data,gmt.file,nsim=1000,convertToEns=T,convertHu2Mm=F,nt=2
   }
   base::close(pb)
   
-  ix = is.na(data$scgsea$es)
-  data$scgsea$es[ix] = 0
-  data$scgsea$nes[ix] = 0
-  data$scgsea$pval[ix] = 1
-  data$scgsea$fdr[ix] = 1
-    
+  ix = is.na(data$scgsea$nes)
+  if(sum(ix)>0) {
+    data$scgsea$nes[ix] = 0
+    data$scgsea$pval[ix] = 1
+    data$scgsea$fdr[ix] = 1
+  }
+  
   data$scgsea$x = data$scgsea$nes
-  data$scgsea$x[data$scgsea$x<0 | data$scgsea$fdr>=0.05] = 0
+  data$scgsea$x[data$scgsea$x<0 | data$scgsea$fdr>=fdr.th] = 0
   data$scgsea$x = Matrix::Matrix(data = data$pca$cells %*% t(data$scgsea$x),sparse = T)
   
   data$scgsea$stat = df[,c("pathway","size")]
