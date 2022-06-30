@@ -42,5 +42,6 @@ Imports:
     GSVA,
     limma,
     sva,
-    RcppML
+    RcppML,
+    pointr
 SystemRequirements: GNU make

@@ -160,6 +160,7 @@ runGSEA <- function(data,gmt.file,nsim=1000,convertToEns=T,convertHu2Mm=F,nt=2,m
 #' @import fastmatch
 #' @importFrom RcppML nmf
 #' @import utils
+#' @import pointr
 #' @export
 runScGSEA <- function(data,gmt.file,nsim=1000,convertToEns=T,convertHu2Mm=F,nt=2,minSize=15,maxSize=Inf,verbose=TRUE,seed=180582,nmf.k=100)
 {
@@ -204,12 +205,19 @@ runScGSEA <- function(data,gmt.file,nsim=1000,convertToEns=T,convertHu2Mm=F,nt=2
       utils::setTxtProgressBar(pb,i)
   }
   base::close(pb)
+  
+  ix = is.na(data$scgsea$es)
+  data$scgsea$es[ix] = 0
+  data$scgsea$nes[ix] = 0
+  data$scgsea$pval[ix] = 1
+  data$scgsea$fdr[ix] = 1
     
   data$scgsea$x = data$scgsea$nes
   data$scgsea$x[data$scgsea$x<0 | data$scgsea$fdr>=0.05] = 0
   data$scgsea$x = Matrix::Matrix(data = data$pca$cells %*% t(data$scgsea$x),sparse = T)
   
   data$scgsea$stat = df[,c("pathway","size")]
-   
+  data$scgsea$x = data$scgsea$x[,colSums(data$scgsea$x)>0]
+  
   return(data)
 }
