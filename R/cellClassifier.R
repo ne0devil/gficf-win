@@ -67,7 +67,7 @@ embedNewCells = function(data,x,nt=2,seed=18051982, verbose=TRUE, ...)
     x@x <- x@x*rep(data$pca$odgenes[colnames(x),'gsf'],diff(x@p))
   }
   
-  if (data$pca$type=="NFM") {
+  if (data$pca$type=="NMF") {
     cells = colnames(x)
     x = t(RcppML::predict.nmf(w = data$pca$genes,data = x))
     rownames(x) = cells; rm(cells,h,w)

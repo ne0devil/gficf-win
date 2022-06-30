@@ -68,7 +68,7 @@ runNMF = function(data,dim=NULL,var.scale=F,seed=180582,use.odgenes=F,n.odgenes=
   rm(nfm);gc()
   data$pca$centre <- F
   data$pca$rescale <- var.scale
-  data$pca$type = "NFM"
+  data$pca$type = "NMF"
   
   if(use.odgenes) {rownames(data$pca$genes)=odgenes} else {rownames(data$pca$genes) = rownames(data$gficf)}
   rownames(data$pca$cells) = colnames(data$gficf)

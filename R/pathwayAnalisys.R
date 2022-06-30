@@ -82,7 +82,7 @@ runGSEA <- function(data,gmt.file,nsim=1000,convertToEns=T,convertHu2Mm=F,nt=2,m
     rownames(data$gsea$es) = rownames(data$gsea$nes) = rownames(data$gsea$pval) = rownames(data$gsea$fdr) = names(data$gsea$pathways)
     colnames(data$gsea$es) = colnames(data$gsea$nes) = colnames(data$gsea$pval) = colnames(data$gsea$fdr) = colnames(data$cluster.gene.rnk)
     
-    progress_for(n=0,tot = ncol(data$cluster.gene.rnk),display = verbose)
+    pb = utils::txtProgressBar(min = 0, max = ncol(data$cluster.gene.rnk), initial = 0,style = 3)
     for (i in 1:ncol(data$cluster.gene.rnk))
     {
       df = as.data.frame(fgsea::fgseaMultilevel(pathways = data$gsea$pathways,stats = data$cluster.gene.rnk[,i],nPermSimple = nsim,gseaParam = 0,nproc = nt,minSize = minSize,maxSize = maxSize))[,1:7]
@@ -90,8 +90,9 @@ runGSEA <- function(data,gmt.file,nsim=1000,convertToEns=T,convertHu2Mm=F,nt=2,m
       data$gsea$nes[df$pathway,i] = df$NES
       data$gsea$pval[df$pathway,i] = df$pval
       data$gsea$fdr[df$pathway,i] = df$padj
-      progress_for(n=i,tot = ncol(data$cluster.gene.rnk),display = verbose)
+      utils::setTxtProgressBar(pb,i)
     }
+    close(pb)
   
   data$gsea$stat = df[,c("pathway","size")]
   } else {
@@ -139,4 +140,76 @@ runGSEA <- function(data,gmt.file,nsim=1000,convertToEns=T,convertHu2Mm=F,nt=2,m
   return(data)
 }
 
+#' Single cell Gene Set Enrichement Analysis on GF-ICF
+#'
+#' Compute GSEA for each cells across a set of input pathways by using NMF.
+#' 
+#' @param data list; GFICF object
+#' @param gmt.file characters; Path to gmt file from MSigDB
+#' @param nsim integer; number of simulation used to compute ES significance.
+#' @param convertToEns boolean: Convert gene sets from gene symbols to Ensable id.
+#' @param convertHu2Mm boolean: Convert gene sets from human symbols to Mouse Ensable id.
+#' @param nt numeric; Number of cpu to use for the GSEA
+#' @param minSize numeric; Minimal size of a gene set to test (default 15). All pathways below the threshold are excluded.
+#' @param maxSize numeric; Maximal size of a gene set to test (default Inf). All pathways above the threshold are excluded.
+#' @param verbose boolean; Show the progress bar.
+#' @param seed integer; Seed to use for random number generation.
+#' @param nmf.k numeric; Rank of NMF.
+#' @return The updated gficf object.
+#' @importFrom fgsea fgsea
+#' @import fastmatch
+#' @importFrom RcppML nmf
+#' @import utils
+#' @export
+runScGSEA <- function(data,gmt.file,nsim=1000,convertToEns=T,convertHu2Mm=F,nt=2,minSize=15,maxSize=Inf,verbose=TRUE,seed=180582,nmf.k=100)
+{
+  if (is.null(data$scgsea))
+  {
+    data$scgsea = list()
+    if (data$pca$type == "NMF"){
+      if (data$dimPCA<nmf.k) {
+        data$scgsea$nmf.w = Matrix::Matrix(data = t(RcppML::nmf(data = data$gficf,k=nmf.k)$w),sparse = T)
+      } else {
+        tsmessage(paste0("Found NMF reduction with k greaten or equal to ", nmf.k),verbose=T)
+        pointr::ptr("tmp", "data$pca$genes")
+        data$scgsea$nmf.w = tmp
+        rm(tmp)
+      }
+    } else {
+      data$scgsea$nmf.w = Matrix::Matrix(data = t(RcppML::nmf(data = data$gficf,k=nmf.k)$w),sparse = T)
+    }
+  } else {
+    tsmessage("Found a previus scGSEA to remove it exec data$scgsea <- NULL",verbose=T)
+    return(data)
+  }
   
+  tsmessage("Loading pathways...",verbose=verbose)
+  data$scgsea$pathways = gmtPathways(gmt.file,convertToEns,convertHu2Mm,verbose)
+  data$scgsea$es = Matrix::Matrix(data = 0,nrow = length(data$scgsea$pathways),ncol = ncol(data$scgsea$nmf.w))
+  data$scgsea$nes = Matrix::Matrix(data = 0,nrow = length(data$scgsea$pathways),ncol = ncol(data$scgsea$nmf.w))
+  data$scgsea$pval = Matrix::Matrix(data = 0,nrow = length(data$scgsea$pathways),ncol = ncol(data$scgsea$nmf.w))
+  data$scgsea$fdr = Matrix::Matrix(data = 0,nrow = length(data$scgsea$pathways),ncol = ncol(data$scgsea$nmf.w))
+    
+  rownames(data$scgsea$es) = rownames(data$scgsea$nes) = rownames(data$scgsea$pval) = rownames(data$scgsea$fdr) = names(data$scgsea$pathways)
+  
+  tsmessage("Performing GSEA...",verbose=verbose)
+  pb = utils::txtProgressBar(min = 0, max = ncol(data$scgsea$nmf.w), initial = 0,style = 3) 
+  for (i in 1:ncol(data$scgsea$nmf.w))
+  {
+      df = as.data.frame(fgsea::fgseaMultilevel(pathways = data$scgsea$pathways,stats = data$scgsea$nmf.w[,i],nPermSimple = nsim,gseaParam = 1,nproc = nt,minSize = minSize,maxSize = maxSize))[,1:7]
+      data$scgsea$es[df$pathway,i] = df$ES
+      data$scgsea$nes[df$pathway,i] = df$NES
+      data$scgsea$pval[df$pathway,i] = df$pval
+      data$scgsea$fdr[df$pathway,i] = df$padj
+      utils::setTxtProgressBar(pb,i)
+  }
+  base::close(pb)
+    
+  data$scgsea$x = data$scgsea$nes
+  data$scgsea$x[data$scgsea$x<0 | data$scgsea$fdr>=0.05] = 0
+  data$scgsea$x = Matrix::Matrix(data = data$pca$cells %*% t(data$scgsea$x),sparse = T)
+  
+  data$scgsea$stat = df[,c("pathway","size")]
+   
+  return(data)
+}
