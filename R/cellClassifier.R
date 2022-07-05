@@ -4,8 +4,8 @@
 #' Existing cells are used as training set.
 #' 
 #' @param data list; GFICF object
-#' @param classes chareachters; Classes of aready exsiting cells in the order of thay are in colnames(data$gficf).
-#' @param k integer; Number of K-nn to use for classification. Odd number less than 30 are prefered.
+#' @param classes chareachters; Classes of already existing cells in the order of they are in colnames(data$gficf).
+#' @param k integer; Number of K-nn to use for classification. Odd number less than 30 are preferred.
 #' @param seed integer; Initial seed to use.
 #' @param method chareachters; Which space in which apply KNN (subspace or embedded). Default is embedded (i.e., umap/tsne space) because usually gives better results then the subspace PCA/NMF.
 #' @return A dataframe containing cell id and predicted classes.
@@ -20,14 +20,13 @@ classify.cells = function(data,classes,k=7,seed=18051982,method="embedded")
   classes = factor(as.character(classes))
   if (method%in%"subspace")
   {
-    res = class::knn(data$pca$cells,data$pca$pred,classes,k = k,prob = F) 
+    res = class::knn(data$pca$cells,data$pca$pred,classes,k = k,prob = T) 
   } else {
-    res = class::knn(data$embedded[data$embedded$predicted%in%"NO",c(1,2)],data$embedded[data$embedded$predicted%in%"YES",c(1,2)],classes,k = k,prob = F)
+    res = class::knn(data$embedded[data$embedded$predicted%in%"NO",c(1,2)],data$embedded[data$embedded$predicted%in%"YES",c(1,2)],classes,k = k,prob = T)
   }
-  df = data.frame(cell.id=rownames(data$pca$pred),pred=as.character(res),stringsAsFactors = F)
+  df = data.frame(cell.id=rownames(data$pca$pred),pred=as.character(res),prob=attr(res,"prob"),stringsAsFactors = F)
   return(df)
 }
-
 
 #' Embed new cells in an existing space 
 #'
@@ -70,7 +69,7 @@ embedNewCells = function(data,x,nt=2,seed=18051982, verbose=TRUE, ...)
   if (data$pca$type=="NMF") {
     cells = colnames(x)
     x = t(RcppML::predict.nmf(w = data$pca$genes,data = x))
-    rownames(x) = cells; rm(cells,h,w)
+    rownames(x) = cells
   } else {
     x = t(x) %*% data$pca$genes
   }
