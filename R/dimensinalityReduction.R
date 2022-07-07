@@ -90,7 +90,7 @@ runNMF = function(data,dim=NULL,var.scale=F,seed=180582,use.odgenes=F,n.odgenes=
 #' @param plot.odgenes boolean; Show significant overdispersed genes respect to ICF values.
 #' @return The updated gficf object. 
 #' @return The updated gficf object.
-#' @importFrom rsvd rpca
+#' @importFrom irlba irlba
 #' 
 #' @export
 runPCA = function(data,dim=NULL,var.scale=F,centre=F,randomized=T,seed=180582,use.odgenes=F,n.odgenes=NULL,plot.odgenes=F)
@@ -131,11 +131,19 @@ runPCA = function(data,dim=NULL,var.scale=F,centre=F,randomized=T,seed=180582,us
     data$pca$odgenes = overD
   }
   
-  x = rsvd::rpca(data$pca$cells,k=dim,center=centre,scale=F,rand=randomized)
+  #x = rsvd::rpca(data$pca$cells,k=dim,center=centre,scale=F,rand=randomized)
+  if (centre) {
+    x <- irlba::irlba(A = data$pca$cells,nv=dim,center = Matrix::rowMeans(t(data$pca$cells)))
+  } else {
+    x <- irlba::irlba(A = data$pca$cells,nv=dim)
+  }
+  
+  x$x <- x$u %*% diag(x$d)
   data$pca$cells = x$x
   data$pca$centre <- centre
   data$pca$rescale <- var.scale
-  data$pca$genes <- x$rotation
+  data$pca$genes <- x$v
+  rm(x); gc()
   data$pca$type = "PCA"
   if(use.odgenes) {rownames(data$pca$genes)=odgenes} else {rownames(data$pca$genes) = rownames(data$gficf)}
   rownames(data$pca$cells) = colnames(data$gficf)
@@ -206,24 +214,24 @@ runReduction = function(data,reduction="tumap",nt=2,seed=18051982, verbose=T, ..
 #' Compute the number of dimension to use for either PCA or LSA.
 #' 
 #' @param data list; GFICF object
-#' @param randomized logical; Use randomized (faster) version for matrix decomposition (default is TRUE).
+#' @param seed numeric; seed to use.
 #' @param subsampling logical; Use only a subset of the data for the imputation of dimensions to use.
 #' @param plot logical; Show eblow plot.
 #' @importFrom RSpectra svds
-#' @importFrom rsvd rsvd
 #' 
 #' @export
-computePCADim = function(data,randomized=T,subsampling=F,plot=T)
+computePCADim = function(data,seed=180582,subsampling=F,plot=T)
 {
+  set.seed(seed)
   dim = min(50,ncol(data$gficf))
   
   if (subsampling)
   {
     x = data$gficf[,sample(x = 1:ncol(data$gficf),size = round(ncol(data$gficf)/100*5))]
-    if (randomized) {ppk<- rsvd::rsvd(t(x),k=dim)} else {ppk<- RSpectra::svds(t(x),k=dim)}
+    ppk<- RSpectra::svds(t(x),k=dim)
     rm(x)
   } else {
-    if (randomized) {ppk<- rsvd::rsvd(t(data$gficf),k=dim)} else {ppk<- RSpectra::svds(t(data$gficf),k=dim)}
+    ppk<- RSpectra::svds(t(data$gficf),k=dim)
   }
   
   explained.var = ppk$d^2 / sum(ppk$d^2)
