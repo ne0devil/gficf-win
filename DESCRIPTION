@@ -16,7 +16,7 @@ Imports:
     uwot,
     igraph,
     ggplot2,
-    rsvd,
+    irlba,
     ggrepel,
     Rtsne,
     fastmatch,
@@ -43,5 +43,9 @@ Imports:
     limma,
     sva,
     RcppML,
-    pointr
+    pointr,
+    AnnotationHub,
+    ensembldb
+Remotes:
+    github::zdebruine/RcppML
 SystemRequirements: GNU make

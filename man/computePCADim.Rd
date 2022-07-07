@@ -4,12 +4,12 @@
 \alias{computePCADim}
 \title{Number of features to use}
 \usage{
-computePCADim(data, randomized = T, subsampling = F, plot = T)
+computePCADim(data, seed = 180582, subsampling = F, plot = T)
 }
 \arguments{
 \item{data}{list; GFICF object}
 
-\item{randomized}{logical; Use randomized (faster) version for matrix decomposition (default is TRUE).}
+\item{seed}{numeric; seed to use.}
 
 \item{subsampling}{logical; Use only a subset of the data for the imputation of dimensions to use.}
 

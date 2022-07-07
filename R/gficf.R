@@ -22,7 +22,7 @@
 gficf = function(M,cell_count_cutoff=5,cell_percentage_cutoff2=0.03,nonz_mean_cutoff=1.12,storeRaw=TRUE,batches=NULL,groups=NULL,verbose=TRUE, ...)
 {
   data = list()
-  M = normCounts(M,data,cell_count_cutoff,cell_percentage_cutoff2,nonz_mean_cutoff,normalizeCounts=normalize,verbose=verbose, ...)
+  M = normCounts(M,cell_count_cutoff,cell_percentage_cutoff2,nonz_mean_cutoff,normalizeCounts=normalize,verbose=verbose, ...)
   data$gficf = tf(M,verbose = verbose)
   if (storeRaw) {data$rawCounts=M;rm(M)}
   data$w = getIdfW(data$gficf,verbose = verbose)
@@ -41,7 +41,7 @@ gficf = function(M,cell_count_cutoff=5,cell_percentage_cutoff2=0.03,nonz_mean_cu
 #' @import Matrix
 #' @importFrom edgeR DGEList calcNormFactors cpm
 #' 
-normCounts = function(M,data,cell_count_cutoff=5,cell_percentage_cutoff2=0.03,nonz_mean_cutoff=1.12,batches=NULL,groups=NULL,verbose=TRUE, ...)
+normCounts = function(M,cell_count_cutoff=5,cell_percentage_cutoff2=0.03,nonz_mean_cutoff=1.12,batches=NULL,groups=NULL,verbose=TRUE, ...)
 {
   ix = Matrix::rowSums(M!=0)
   tsmessage("Gene filtering..",verbose = verbose)

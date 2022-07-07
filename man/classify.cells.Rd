@@ -9,9 +9,9 @@ classify.cells(data, classes, k = 7, seed = 18051982, method = "embedded")
 \arguments{
 \item{data}{list; GFICF object}
 
-\item{classes}{chareachters; Classes of aready exsiting cells in the order of thay are in colnames(data$gficf).}
+\item{classes}{chareachters; Classes of already existing cells in the order of they are in colnames(data$gficf).}
 
-\item{k}{integer; Number of K-nn to use for classification. Odd number less than 30 are prefered.}
+\item{k}{integer; Number of K-nn to use for classification. Odd number less than 30 are preferred.}
 
 \item{seed}{integer; Initial seed to use.}
 
