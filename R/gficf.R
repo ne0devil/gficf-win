@@ -7,28 +7,35 @@
 #' to a document, genes analogous to words and gene counts to be analogous of the word’s occurrence in a document.
 #' 
 #' @param M Matrix; UMI cell count matrix
+#' @param QCdata list; QC cell object. 
 #' @param cell_count_cutoff numeric; All genes detected in less than cell_count_cutoff cells will be excluded (default 5).
 #' @param cell_percentage_cutoff2 numeric; All genes detected in at least this percentage of cells will be included (default 0.03, i.e. 3% of cells).
 #' @param nonz_mean_cutoff numeric genes detected in the number of cells between the above mentioned cutoffs are selected only when their average expression in non-zero cells is above this cutoff (default 1.12).
 #' @param storeRaw logical; Store UMI counts.
-#' @param batches vector; Vector / factor for batch.
-#' @param groups vector; Vector / factor for biological condition of interest.
+#' @param batches vector; Vector or factor for batch.
+#' @param groups vector; Vector or factor for biological condition of interest.
 #' @param verbose boolean; Increase verbosity.
 #' @param ... Additional arguments to pass to ComBat_seq call.
 #' @return The updated gficf object.
-#' @importFrom sva ComBat_seq
 #' 
 #' @export
-gficf = function(M,cell_count_cutoff=5,cell_percentage_cutoff2=0.03,nonz_mean_cutoff=1.12,storeRaw=TRUE,batches=NULL,groups=NULL,verbose=TRUE, ...)
+gficf = function(M,QCdata=NULL,cell_count_cutoff=5,cell_percentage_cutoff2=0.03,nonz_mean_cutoff=1.12,storeRaw=TRUE,batches=NULL,groups=NULL,verbose=TRUE, ...)
 {
   data = list()
-  M = normCounts(M,cell_count_cutoff,cell_percentage_cutoff2,nonz_mean_cutoff,normalizeCounts=normalize,verbose=verbose, ...)
-  data$gficf = tf(M,verbose = verbose)
-  if (storeRaw) {data$rawCounts=M;rm(M)}
+  data$counts = M;rm(M);gc()
+  
+  if (!is.null(QCdata)) {
+    data$QC.metadata = QCdata$QCdata
+    data$ann.hub.id = QCdata$ann.hub.id
+    rm(QCdata);gc()
+  }
+  
+  data = normCountsData(data,cell_count_cutoff,cell_percentage_cutoff2,nonz_mean_cutoff,batches,groups,verbose=verbose, ...)
+  data$gficf = tf(data$rawCounts,verbose = verbose)
+  if (!storeRaw) {data$rawCounts=NULL;data$counts=NULL;gc()}
   data$w = getIdfW(data$gficf,verbose = verbose)
   data$gficf = idf(data$gficf,data$w,verbose = verbose)
   data$gficf = t(l.norm(t(data$gficf),norm = "l2",verbose = verbose))
-  gc()
   
   data$param <- list()
   data$param$cell_count_cutoff = cell_count_cutoff
@@ -40,15 +47,20 @@ gficf = function(M,cell_count_cutoff=5,cell_percentage_cutoff2=0.03,nonz_mean_cu
 
 #' @import Matrix
 #' @importFrom edgeR DGEList calcNormFactors cpm
+#' @importFrom sva ComBat_seq
 #' 
-normCounts = function(M,cell_count_cutoff=5,cell_percentage_cutoff2=0.03,nonz_mean_cutoff=1.12,batches=NULL,groups=NULL,verbose=TRUE, ...)
+normCounts = function(M,cell_count_cutoff=5,cell_percentage_cutoff2=0.03,nonz_mean_cutoff=1.12,batches=NULL,groups=NULL,verbose=TRUE,filterGene= TRUE, ...)
 {
   ix = Matrix::rowSums(M!=0)
-  tsmessage("Gene filtering..",verbose = verbose)
-  M = filter_genes_cell2loc_style(data = M,cell_count_cutoff,cell_percentage_cutoff2,nonz_mean_cutoff)
+  
+  if (filterGene) {
+    tsmessage("Gene filtering..",verbose = verbose)
+    M = filter_genes_cell2loc_style(data = M,cell_count_cutoff,cell_percentage_cutoff2,nonz_mean_cutoff)
+  }
+  
   if(!is.null(batches)){
     tsmessage("Correcting batches..",verbose = verbose)
-    sva::ComBat_seq(counts = M,batch = batches,group = groups, ...)
+    M = sva::ComBat_seq(counts = M,batch = batches,group = groups, ...)
   }
   tsmessage("Normalize counts..",verbose = verbose)
   M <- Matrix::Matrix(edgeR::cpm(edgeR::calcNormFactors(edgeR::DGEList(counts=M),normalized.lib.sizes = T)),sparse = T) 
@@ -56,6 +68,31 @@ normCounts = function(M,cell_count_cutoff=5,cell_percentage_cutoff2=0.03,nonz_me
   return(M)
 }
 
+#' @import Matrix
+#' @importFrom edgeR DGEList calcNormFactors cpm
+#' @importFrom sva ComBat_seq
+#' 
+normCountsData = function(data,cell_count_cutoff=5,cell_percentage_cutoff2=0.03,nonz_mean_cutoff=1.12,batches=NULL,groups=NULL,verbose=TRUE,filterGene= TRUE, ...)
+{
+  ix = Matrix::rowSums(data$counts!=0)
+  
+  if (filterGene) {
+  tsmessage("Gene filtering..",verbose = verbose)
+  data$counts = filter_genes_cell2loc_style(data = data$counts,cell_count_cutoff,cell_percentage_cutoff2,nonz_mean_cutoff)
+  }
+  
+  if(!is.null(batches)){
+    tsmessage("Correcting batches..",verbose = verbose)
+    data$counts = sva::ComBat_seq(counts = data$counts,batch = batches,group = groups, ...)
+  }
+  
+  tsmessage("Normalize counts..",verbose = verbose)
+  data$rawCounts <- Matrix::Matrix(edgeR::cpm(edgeR::calcNormFactors(edgeR::DGEList(counts=data$counts),normalized.lib.sizes = T)),sparse = T) 
+  
+  if(is.null(batches)){data$counts=NULL;gc()}
+  
+  return(data)
+}
 
 #' @import Matrix
 #' 

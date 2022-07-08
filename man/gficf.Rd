@@ -6,6 +6,7 @@
 \usage{
 gficf(
   M,
+  QCdata = NULL,
   cell_count_cutoff = 5,
   cell_percentage_cutoff2 = 0.03,
   nonz_mean_cutoff = 1.12,
@@ -19,6 +20,8 @@ gficf(
 \arguments{
 \item{M}{Matrix; UMI cell count matrix}
 
+\item{QCdata}{list; QC cell object.}
+
 \item{cell_count_cutoff}{numeric; All genes detected in less than cell_count_cutoff cells will be excluded (default 5).}
 
 \item{cell_percentage_cutoff2}{numeric; All genes detected in at least this percentage of cells will be included (default 0.03, i.e. 3% of cells).}
@@ -27,9 +30,9 @@ gficf(
 
 \item{storeRaw}{logical; Store UMI counts.}
 
-\item{batches}{vector; Vector / factor for batch.}
+\item{batches}{vector; Vector or factor for batch.}
 
-\item{groups}{vector; Vector / factor for biological condition of interest.}
+\item{groups}{vector; Vector or factor for biological condition of interest.}
 
 \item{verbose}{boolean; Increase verbosity.}
 

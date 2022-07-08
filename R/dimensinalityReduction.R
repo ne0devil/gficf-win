@@ -83,7 +83,6 @@ runNMF = function(data,dim=NULL,var.scale=F,seed=180582,use.odgenes=F,n.odgenes=
 #' @param dim integer; Number of dimension which to reduce the dataset.
 #' @param var.scale logical; Rescale gficf scores for adjusted variance like in pagoda2 (highly experimental!).
 #' @param centre logical; Centre gficf scores before applying reduction (increase separation).
-#' @param randomized logical; Use randomized (faster) version for matrix decomposition (default is TRUE).
 #' @param seed integer; Initial seed to use.
 #' @param use.odgenes boolean; Use significant overdispersed genes respect to ICF values (highly experimental!).
 #' @param n.odgenes integer; Number of overdispersed genes to use (highly experimental!). A good choise seems to be usually between 1000 and 3000.
@@ -93,7 +92,7 @@ runNMF = function(data,dim=NULL,var.scale=F,seed=180582,use.odgenes=F,n.odgenes=
 #' @importFrom irlba irlba
 #' 
 #' @export
-runPCA = function(data,dim=NULL,var.scale=F,centre=F,randomized=T,seed=180582,use.odgenes=F,n.odgenes=NULL,plot.odgenes=F)
+runPCA = function(data,dim=NULL,var.scale=F,centre=F,seed=180582,use.odgenes=F,n.odgenes=NULL,plot.odgenes=F)
 {
   
   if(use.odgenes & is.null(data$rawCounts)) {stop("Raw Counts absent! Please run gficf normalization with storeRaw = T")}

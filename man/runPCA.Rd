@@ -9,7 +9,6 @@ runPCA(
   dim = NULL,
   var.scale = F,
   centre = F,
-  randomized = T,
   seed = 180582,
   use.odgenes = F,
   n.odgenes = NULL,
@@ -24,8 +23,6 @@ runPCA(
 \item{var.scale}{logical; Rescale gficf scores for adjusted variance like in pagoda2 (highly experimental!).}
 
 \item{centre}{logical; Centre gficf scores before applying reduction (increase separation).}
-
-\item{randomized}{logical; Use randomized (faster) version for matrix decomposition (default is TRUE).}
 
 \item{seed}{integer; Initial seed to use.}
 

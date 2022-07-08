@@ -12,7 +12,7 @@
 #' @import ensembldb
 #' 
 #' @export
-filter.Cells = function(counts,organism="Homo sapiens",plot=F,verbose=T) {
+filterCells = function(counts,organism="Homo sapiens",plot=F,verbose=T) {
   organism = base::match.arg(arg = organism,choices = c("Homo sapiens","Mus musculus"),several.ok = F)
   
   metadata = data.frame(cell.id = colnames(counts),nUMI=Matrix::colSums(counts),nGenes=Matrix::colSums(counts!=0),stringsAsFactors = F)
