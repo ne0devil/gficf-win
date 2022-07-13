@@ -6,7 +6,7 @@
 \usage{
 Read10X(
   data.dir,
-  gene.column = 2,
+  gene.column = 1,
   cell.column = 1,
   unique.features = TRUE,
   strip.suffix = FALSE

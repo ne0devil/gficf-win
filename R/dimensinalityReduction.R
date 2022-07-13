@@ -163,21 +163,33 @@ runReduction = function(data,reduction="tumap",nt=2,seed=18051982, verbose=T, ..
   if (!is.null(data$pca))
   {
     if(reduction=="tumap"){
-      data$uwot = uwot::tumap(X = data$pca$cells,scale = F,n_threads = nt,verbose = verbose,ret_model = T, ...)
+      if (is.null(data$pca$harmony)){
+        data$uwot = uwot::tumap(X = data$pca$cells,scale = F,n_threads = nt,verbose = verbose,ret_model = T, ...)
+      } else {
+        data$uwot = uwot::tumap(X = t(data$pca$harmony$Z_corr),scale = F,n_threads = nt,verbose = verbose,ret_model = T, ...)
+      }
       data$embedded = base::as.data.frame(data$uwot$embedding)
     }
     
     if(reduction=="umap"){
-      data$uwot = uwot::umap(X = data$pca$cells, scale = F,n_threads = nt,verbose = verbose, ret_model = T, ...)
+      if (is.null(data$pca$harmony)){
+        data$uwot = uwot::umap(X = data$pca$cells, scale = F,n_threads = nt,verbose = verbose, ret_model = T, ...)
+      } else {
+        data$uwot = uwot::umap(X = t(data$pca$harmony$Z_corr), scale = F,n_threads = nt,verbose = verbose, ret_model = T, ...)
+      }
       data$embedded = base::as.data.frame(data$uwot$embedding)
     }
     
     if(reduction=="tsne"){
       data$uwot = NULL
-      data$embedded = base::as.data.frame(Rtsne::Rtsne(X = data$pca$cells,dims = 2, pca = F,verbose = verbose,max_iter=1000,num_threads=nt, ...)$Y)
+      if (is.null(data$pca$harmony)){
+        data$embedded = base::as.data.frame(Rtsne::Rtsne(X = data$pca$cells,dims = 2, pca = F,verbose = verbose,max_iter=1000,num_threads=nt, ...)$Y)
+      } else {
+        data$embedded = base::as.data.frame(Rtsne::Rtsne(X = t(data$pca$harmony$Z_corr),dims = 2, pca = F,verbose = verbose,max_iter=1000,num_threads=nt, ...)$Y)
+      }
     }
   } else {
-    message("Wrning: Reduction is applied directly on GF-ICF values.. can be slow if the dataset is big!")
+    message("Warning: Reduction is applied directly on GF-ICF values.. can be slow if the dataset is big!")
     
     if(reduction=="tumap"){data$embedded = base::as.data.frame(uwot::tumap(X = as.matrix(t(data$gficf)),scale = F,n_threads = nt,verbose = verbose, ...))}
     
@@ -291,7 +303,7 @@ findOverDispersed=function(data,gam.k=5, alpha=5e-2, plot=FALSE, use.unadjusted.
 }
 
 # BH P-value adjustment with a log option
-bh.adjust <- function(x, log = FALSE)
+bh.adjust <- function(x, log = FALSE, verbose = F)
 {
   nai <- which(!is.na(x))
   ox <- x
@@ -305,4 +317,27 @@ bh.adjust <- function(x, log = FALSE)
   a <- rev(cummin(rev(q)))[order(id)]
   ox[nai]<-a
   ox
+}
+
+#' Number of features to use 
+#'
+#' Compute the number of dimension to use for either PCA or LSA.
+#' 
+#' @param data list; GFICF object
+#' @param metadata dataframe; Either (1) Dataframe with variables to integrate or (2) vector with labels.
+#' @param var.to.use character; If meta_data is dataframe, this defined which variable(s) to remove (character vector).
+#' @param verbose boolean; Increase verbosity.
+#' @param ... Additional arguments to pass to HarmonyMatrix function.
+#' @importFrom harmony HarmonyMatrix
+#' 
+#' @export
+runHarmony <- function(data,metadata, var.to.use, verbose = T, ...)
+{
+  tsmessage(".. Running Harmony on PCA/NMF space",verbose=verbose)
+  if (is.null(data$pca)) {stop("Please run fist PCA or NMF reduction!")}
+  data$pca$harmony <- harmony::HarmonyMatrix(data$pca$cells, meta_data = metadata, vars_use = var.to.use,do_pca = F, verbose = F, return_object = T, ...)
+  colnames(data$pca$harmony$Z_corr) <- rownames(data$pca$cells)
+  rownames(data$pca$harmony$Z_corr) <- colnames(data$pca$cells)
+  tsmessage(".. Finished!",verbose=verbose)
+  return(data)
 }
