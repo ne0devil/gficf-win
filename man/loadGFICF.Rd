@@ -4,7 +4,7 @@
 \alias{loadGFICF}
 \title{Restore GFICF object.}
 \usage{
-loadGFICF(file)
+loadGFICF(file, verbose = T)
 }
 \arguments{
 \item{file}{name of the file where the object is stored.}

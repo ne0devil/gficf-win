@@ -19,15 +19,17 @@
 #' @return The updated gficf object.
 #' 
 #' @export
-gficf = function(M,QCdata=NULL,cell_count_cutoff=5,cell_percentage_cutoff2=0.03,nonz_mean_cutoff=1.12,storeRaw=TRUE,batches=NULL,groups=NULL,verbose=TRUE, ...)
+gficf = function(M=NULL,QCdata=NULL,cell_count_cutoff=5,cell_percentage_cutoff2=0.03,nonz_mean_cutoff=1.12,storeRaw=TRUE,batches=NULL,groups=NULL,verbose=TRUE, ...)
 {
-  data = list()
-  data$counts = M;rm(M);gc()
+  if(is.null(M) & is.null(QCdata)) {stop("Input data is missing!!")}
   
+  data = list()
   if (!is.null(QCdata)) {
-    data$QC.metadata = QCdata$QCdata
-    data$ann.hub.id = QCdata$ann.hub.id
-    rm(QCdata);gc()
+    data = QCdata
+    rm(QCdata);gc(reset = T)
+    if (!is.null(M)) {rm(M);gc()}
+  } else {
+    data$counts = M;rm(M);gc()
   }
   
   data = normCountsData(data,cell_count_cutoff,cell_percentage_cutoff2,nonz_mean_cutoff,batches,groups,verbose=verbose, ...)
@@ -60,7 +62,7 @@ normCounts = function(M,cell_count_cutoff=5,cell_percentage_cutoff2=0.03,nonz_me
   
   if(!is.null(batches)){
     tsmessage("Correcting batches..",verbose = verbose)
-    M = sva::ComBat_seq(counts = M,batch = batches,group = groups, ...)
+    M = Matrix::Matrix(data = sva::ComBat_seq(counts = as.matrix(M),batch = batches,group = groups, ...),sparse = T)
   }
   tsmessage("Normalize counts..",verbose = verbose)
   M <- Matrix::Matrix(edgeR::cpm(edgeR::calcNormFactors(edgeR::DGEList(counts=M),normalized.lib.sizes = T)),sparse = T) 
@@ -77,13 +79,14 @@ normCountsData = function(data,cell_count_cutoff=5,cell_percentage_cutoff2=0.03,
   ix = Matrix::rowSums(data$counts!=0)
   
   if (filterGene) {
-  tsmessage("Gene filtering..",verbose = verbose)
-  data$counts = filter_genes_cell2loc_style(data = data$counts,cell_count_cutoff,cell_percentage_cutoff2,nonz_mean_cutoff)
+    tsmessage("Gene filtering..",verbose = verbose)
+    data$counts = filter_genes_cell2loc_style(data = data$counts,cell_count_cutoff,cell_percentage_cutoff2,nonz_mean_cutoff)
   }
   
   if(!is.null(batches)){
     tsmessage("Correcting batches..",verbose = verbose)
-    data$counts = sva::ComBat_seq(counts = data$counts,batch = batches,group = groups, ...)
+    data$counts = Matrix::Matrix(data = sva::ComBat_seq(counts = as.matrix(data$counts),batch = batches,group = groups, ...),sparse = T)
+    gc()
   }
   
   tsmessage("Normalize counts..",verbose = verbose)
@@ -164,30 +167,29 @@ l.norm = function (m, norm = c("l1", "l2"),verbose)
 #' data2 <- loadGFICF(file = gficf_file)
 #' 
 #' @export
-saveGFICF <- function(data, file="~/Documents/gficf.test") 
+saveGFICF <- function(data, file, verbose = TRUE) 
 {
   wd <- getwd()
   tryCatch({
     # create directory to store files in
     mod_dir <- tempfile(pattern = "dir")
-    dir.create(mod_dir)
+    #dir.create(mod_dir)
+    gficf_dir <- file.path(mod_dir, "gficf")
+    dir.create(gficf_dir,recursive = T)
+    
+    # save uwot object
+    if(data$reduction %in% c("umap","tumap"))
+    {
+      uwot_dir <- file.path(gficf_dir, "uwot")
+      dir.create(uwot_dir,recursive = T)
+      uwot_tmpfname <- file.path(uwot_dir,"uwot_obj")
+      uwot::save_uwot(model = data$uwot,file = uwot_tmpfname,verbose = verbose)
+    }
     
     # save gficf object
-    gficf_dir <- file.path(mod_dir, "gficf")
-    dir.create(gficf_dir)
     gficfl_tmpfname <- file.path(gficf_dir, "data")
     saveRDS(data, file = gficfl_tmpfname)
     
-    # save uwot nn index if necessary
-    if(data$reduction %in% c("umap","tumap"))
-    {
-      uwot_dir <- file.path(gficf_dir, "uwot_idx")
-      dir.create(uwot_dir)
-      nn_tmpfname <- file.path(uwot_dir,"nn1")
-      data$uwot$nn_index$save(nn_tmpfname)
-      data$uwot$nn_index$unload()
-      data$uwot$nn_index$load(nn_tmpfname)
-    }
     # archive the files under the temp dir into the single target file
     # change directory so the archive only contains one directory
     setwd(mod_dir)
@@ -214,7 +216,7 @@ saveGFICF <- function(data, file="~/Documents/gficf.test")
 #' data2 <- loadGFICF(file = gficf_file)
 #' 
 #' @export
-loadGFICF <- function(file)
+loadGFICF <- function(file,verbose = T)
 {
   model <- NULL
   
@@ -231,18 +233,14 @@ loadGFICF <- function(file)
     }
     data <- readRDS(file = gficf_fname)
     
-    # load umap index if necessary
+    # load umap obj if necessary
     if(data$reduction %in% c("umap","tumap"))
     {
-      nn_fname <- file.path(mod_dir,"gficf/uwot_idx/nn1")
+      nn_fname <- file.path(mod_dir,"gficf/uwot/uwot_obj")
       if (!file.exists(nn_fname)) {
-        stop("Can't find nearest neighbor index ", nn_fname, " in ", file)
+        stop("Can't find uwot object ", nn_fname, " in ", file)
       }
-      
-      # can provide any value for ndim as we get a new value when we load
-      ann <- uwot:::create_ann(names(data$uwot$metric)[1], ndim = 1)
-      ann$load(nn_fname)
-      data$uwot$nn_index <- ann
+      data$uwot <- uwot::load_uwot(file = nn_fname, verbose = verbose)
     }
   },
   finally = {

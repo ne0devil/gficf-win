@@ -41,7 +41,6 @@ Imports:
     parallel,
     GSVA,
     limma,
-    sva,
     RcppML,
     pointr,
     AnnotationHub,

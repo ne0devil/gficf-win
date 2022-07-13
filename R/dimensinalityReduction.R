@@ -4,12 +4,11 @@
 #' 
 #' @param data list; GFICF object
 #' @param dim integer; Number of dimension which to reduce the dataset.
-#' @param var.scale logical; Rescale gficf scores for adjusted variance like in pagoda2 (highly experimental!).
 #' @param centre logical; Centre gficf scores before applying reduction (increase separation).
 #' @param randomized logical; Use randomized (faster) version for matrix decomposition (default is TRUE).
 #' @param seed integer; Initial seed to use.
-#' @param use.odgenes boolean; Use significant overdispersed genes respect to ICF values (highly experimental!).
-#' @param n.odgenes integer; Number of overdispersed genes to use (highly experimental!). A good choise seems to be usually between 1000 and 3000.
+#' @param use.odgenes boolean; Use only significant overdispersed genes respect to ICF values.
+#' @param n.odgenes integer; Number of overdispersed genes to use. A good choise seems to be usually between 1000 and 3000.
 #' @param plot.odgenes boolean; Show significant overdispersed genes respect to ICF values.
 #' @param ... Additional arguments to pass to nfm call (see ?RcppML::nmf).
 #' @return The updated gficf object.
@@ -17,7 +16,7 @@
 #' @import Matrix
 #' 
 #' @export
-runNMF = function(data,dim=NULL,var.scale=F,seed=180582,use.odgenes=F,n.odgenes=NULL,plot.odgenes=F, ...)
+runNMF = function(data,dim=NULL,seed=180582,use.odgenes=F,n.odgenes=NULL,plot.odgenes=F, ...)
 {
   if(use.odgenes & is.null(data$rawCounts)) {stop("Raw Counts absent! Please run gficf normalization with storeRaw = T")}
   
@@ -47,15 +46,6 @@ runNMF = function(data,dim=NULL,var.scale=F,seed=180582,use.odgenes=F,n.odgenes=
     tsmessage("... using ",length(odgenes)," OD genes",verbose = T)
   } 
   
-  if(var.scale) {
-    if(!use.odgenes) {
-      overD=suppressWarnings(findOverDispersed(data = data,alpha = 0.1,verbose = F))
-      data$pca$cells = t(data$gficf)
-    }
-    data$pca$cells@x <- data$pca$cells@x*rep(overD[colnames(data$pca$cells),'gsf'],diff(data$pca$cells@p))
-    data$pca$odgenes = overD
-  }
-  
   if (is.null(data$pca$cells)){
     tsmessage("Performing NFM..")
     nfm = RcppML::nmf(data$gficf,k = dim, ...)
@@ -66,8 +56,8 @@ runNMF = function(data,dim=NULL,var.scale=F,seed=180582,use.odgenes=F,n.odgenes=
   data$pca$cells <- t(nfm$h)
   data$pca$genes <- nfm$w
   rm(nfm);gc()
-  data$pca$centre <- F
-  data$pca$rescale <- var.scale
+  data$pca$centre <- F # for legacy
+  data$pca$rescale <- F # for legacy
   data$pca$type = "NMF"
   
   if(use.odgenes) {rownames(data$pca$genes)=odgenes} else {rownames(data$pca$genes) = rownames(data$gficf)}
@@ -81,11 +71,10 @@ runNMF = function(data,dim=NULL,var.scale=F,seed=180582,use.odgenes=F,n.odgenes=
 #' 
 #' @param data list; GFICF object
 #' @param dim integer; Number of dimension which to reduce the dataset.
-#' @param var.scale logical; Rescale gficf scores for adjusted variance like in pagoda2 (highly experimental!).
 #' @param centre logical; Centre gficf scores before applying reduction (increase separation).
 #' @param seed integer; Initial seed to use.
-#' @param use.odgenes boolean; Use significant overdispersed genes respect to ICF values (highly experimental!).
-#' @param n.odgenes integer; Number of overdispersed genes to use (highly experimental!). A good choise seems to be usually between 1000 and 3000.
+#' @param use.odgenes boolean; Use only significant overdispersed genes respect to ICF values.
+#' @param n.odgenes integer; Number of overdispersed genes to use. A good choise seems to be usually between 1000 and 3000.
 #' @param plot.odgenes boolean; Show significant overdispersed genes respect to ICF values.
 #' @return The updated gficf object. 
 #' @return The updated gficf object.
@@ -124,12 +113,6 @@ runPCA = function(data,dim=NULL,var.scale=F,centre=F,seed=180582,use.odgenes=F,n
     tsmessage("... using ",length(odgenes)," OD genes",verbose = T)
   }
   
-  if(var.scale) {
-    if(!use.odgenes) {overD=suppressWarnings(findOverDispersed(data = data,alpha = 0.1,verbose = F))}
-    data$pca$cells@x <- data$pca$cells@x*rep(overD[colnames(data$pca$cells),'gsf'],diff(data$pca$cells@p))
-    data$pca$odgenes = overD
-  }
-  
   #x = rsvd::rpca(data$pca$cells,k=dim,center=centre,scale=F,rand=randomized)
   if (centre) {
     x <- irlba::irlba(A = data$pca$cells,nv=dim,center = Matrix::rowMeans(t(data$pca$cells)))
@@ -140,7 +123,7 @@ runPCA = function(data,dim=NULL,var.scale=F,centre=F,seed=180582,use.odgenes=F,n
   x$x <- x$u %*% diag(x$d)
   data$pca$cells = x$x
   data$pca$centre <- centre
-  data$pca$rescale <- var.scale
+  data$pca$rescale <- F
   data$pca$genes <- x$v
   rm(x); gc()
   data$pca$type = "PCA"

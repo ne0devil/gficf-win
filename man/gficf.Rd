@@ -5,7 +5,7 @@
 \title{Gene Frequency - Inverse Cell Frequency (GF-ICF)}
 \usage{
 gficf(
-  M,
+  M = NULL,
   QCdata = NULL,
   cell_count_cutoff = 5,
   cell_percentage_cutoff2 = 0.03,

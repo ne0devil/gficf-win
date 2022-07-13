@@ -4,7 +4,7 @@
 \alias{saveGFICF}
 \title{Save GFICF object.}
 \usage{
-saveGFICF(data, file = "~/Documents/gficf.test")
+saveGFICF(data, file, verbose = TRUE)
 }
 \arguments{
 \item{data}{a GFICF object create by \code{\link{gficf}}.}
