@@ -19,7 +19,7 @@
 #' @return The updated gficf object.
 #' 
 #' @export
-gficf = function(M=NULL,QCdata=NULL,cell_count_cutoff=5,cell_percentage_cutoff2=0.03,nonz_mean_cutoff=1.12,storeRaw=TRUE,batches=NULL,groups=NULL,verbose=TRUE, ...)
+gficf = function(M=NULL,QCdata=NULL,cell_count_cutoff=5,cell_percentage_cutoff2=0.03,nonz_mean_cutoff=1.12,storeRaw=TRUE,batches=NULL,groups=NULL,verbose=TRUE,filterGenes=TRUE, ...)
 {
   if(is.null(M) & is.null(QCdata)) {stop("Input data is missing!!")}
   
@@ -32,7 +32,7 @@ gficf = function(M=NULL,QCdata=NULL,cell_count_cutoff=5,cell_percentage_cutoff2=
     data$counts = M;rm(M);gc()
   }
   
-  data = normCountsData(data,cell_count_cutoff,cell_percentage_cutoff2,nonz_mean_cutoff,batches,groups,verbose=verbose, ...)
+  data = normCountsData(data,cell_count_cutoff,cell_percentage_cutoff2,nonz_mean_cutoff,batches,groups,verbose=verbose,filterGene=filterGenes, ...)
   data$gficf = tf(data$rawCounts,verbose = verbose)
   if (!storeRaw) {data$rawCounts=NULL;data$counts=NULL;gc()}
   data$w = getIdfW(data$gficf,verbose = verbose)
@@ -51,7 +51,7 @@ gficf = function(M=NULL,QCdata=NULL,cell_count_cutoff=5,cell_percentage_cutoff2=
 #' @importFrom edgeR DGEList calcNormFactors cpm
 #' @importFrom sva ComBat_seq
 #' 
-normCounts = function(M,cell_count_cutoff=5,cell_percentage_cutoff2=0.03,nonz_mean_cutoff=1.12,batches=NULL,groups=NULL,verbose=TRUE,filterGene= TRUE, ...)
+normCounts = function(M,cell_count_cutoff=5,cell_percentage_cutoff2=0.03,nonz_mean_cutoff=1.12,batches=NULL,groups=NULL,verbose=TRUE,filterGene=TRUE, ...)
 {
   ix = Matrix::rowSums(M!=0)
   
@@ -178,12 +178,14 @@ saveGFICF <- function(data, file, verbose = TRUE)
     dir.create(gficf_dir,recursive = T)
     
     # save uwot object
-    if(data$reduction %in% c("umap","tumap"))
-    {
-      uwot_dir <- file.path(gficf_dir, "uwot")
-      dir.create(uwot_dir,recursive = T)
-      uwot_tmpfname <- file.path(uwot_dir,"uwot_obj")
-      uwot::save_uwot(model = data$uwot,file = uwot_tmpfname,verbose = verbose)
+    if (!is.null(data$reduction)) {
+      if( data$reduction %in% c("umap","tumap"))
+      {
+        uwot_dir <- file.path(gficf_dir, "uwot")
+        dir.create(uwot_dir,recursive = T)
+        uwot_tmpfname <- file.path(uwot_dir,"uwot_obj")
+        uwot::save_uwot(model = data$uwot,file = uwot_tmpfname,verbose = verbose)
+      }
     }
     
     # save gficf object
