@@ -173,12 +173,17 @@ runScGSEA <- function(data,gmt.file,nsim=1000,convertToEns=T,convertHu2Mm=F,nt=2
     if (data$pca$type == "NMF"){
       if (data$dimPCA<nmf.k || data$pca$use.odgenes) {
         tsmessage("... Performing NMF",verbose=T)
-        data$scgsea$nmf.w = Matrix::Matrix(data = t(RcppML::nmf(data = data$gficf,k=nmf.k)$w),sparse = T)
+        tmp = RcppML::nmf(data = data$gficf,k=nmf.k)
+        data$scgsea$nmf.w <- Matrix::Matrix(data = tmp@w,sparse = T)
+        data$scgsea$nmf.h <- t(Matrix::Matrix(data = tmp@h,sparse = T))
+        rm(tmp);gc()
       } else {
         tsmessage(paste0("Found NMF reduction with k greaten or equal to ", nmf.k),verbose=T)
         pointr::ptr("tmp", "data$pca$genes")
         data$scgsea$nmf.w = tmp
-        rm(tmp)
+        pointr::ptr("tmp2", "data$pca$cells")
+        data$scgsea$nmf.h = tmp2
+        rm(tmp,tmp2);gc()
       }
     } else {
       data$scgsea$nmf.w = Matrix::Matrix(data = t(RcppML::nmf(data = data$gficf,k=nmf.k)$w),sparse = T)
@@ -218,7 +223,7 @@ runScGSEA <- function(data,gmt.file,nsim=1000,convertToEns=T,convertHu2Mm=F,nt=2
   
   data$scgsea$x = data$scgsea$nes
   data$scgsea$x[data$scgsea$x<0 | data$scgsea$fdr>=fdr.th] = 0
-  data$scgsea$x = Matrix::Matrix(data = data$pca$cells %*% t(data$scgsea$x),sparse = T)
+  data$scgsea$x = Matrix::Matrix(data = data$scgsea$nmf.h %*% t(data$scgsea$x),sparse = T)
   
   data$scgsea$stat = df[,c("pathway","size")]
   data$scgsea$x = data$scgsea$x[,colSums(data$scgsea$x)>0]
