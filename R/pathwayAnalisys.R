@@ -149,7 +149,7 @@ runGSEA <- function(data,gmt.file,nsim=1000,convertToEns=T,convertHu2Mm=F,nt=2,m
 #' @param nsim integer; number of simulation used to compute ES significance.
 #' @param convertToEns boolean: Convert gene sets from gene symbols to Ensable id.
 #' @param convertHu2Mm boolean: Convert gene sets from human symbols to Mouse Ensable id.
-#' @param nt numeric; Number of cpu to use for the GSEA
+#' @param nt numeric; Number of cpu to use for the GSEA and NMF
 #' @param minSize numeric; Minimal size of a gene set to test (default 15). All pathways below the threshold are excluded.
 #' @param maxSize numeric; Maximal size of a gene set to test (default Inf). All pathways above the threshold are excluded.
 #' @param verbose boolean; Show the progress bar.
@@ -165,11 +165,14 @@ runGSEA <- function(data,gmt.file,nsim=1000,convertToEns=T,convertHu2Mm=F,nt=2,m
 #' @export
 runScGSEA <- function(data,gmt.file,nsim=1000,convertToEns=T,convertHu2Mm=F,nt=2,minSize=15,maxSize=Inf,verbose=TRUE,seed=180582,nmf.k=100,fdr.th=0.05)
 {
+  options(RcppML.threads = nt)
+  
   if (is.null(data$scgsea))
   {
     data$scgsea = list()
     if (data$pca$type == "NMF"){
-      if (data$dimPCA<nmf.k) {
+      if (data$dimPCA<nmf.k || data$pca$use.odgenes) {
+        tsmessage("... Performing NMF",verbose=T)
         data$scgsea$nmf.w = Matrix::Matrix(data = t(RcppML::nmf(data = data$gficf,k=nmf.k)$w),sparse = T)
       } else {
         tsmessage(paste0("Found NMF reduction with k greaten or equal to ", nmf.k),verbose=T)
@@ -181,8 +184,7 @@ runScGSEA <- function(data,gmt.file,nsim=1000,convertToEns=T,convertHu2Mm=F,nt=2
       data$scgsea$nmf.w = Matrix::Matrix(data = t(RcppML::nmf(data = data$gficf,k=nmf.k)$w),sparse = T)
     }
   } else {
-    tsmessage("Found a previus scGSEA to remove it exec data$scgsea <- NULL",verbose=T)
-    return(data)
+    stop("Found a previus scGSEA please call resetScGSEA first!")
   }
   
   tsmessage("Loading pathways...",verbose=verbose)
@@ -223,3 +225,12 @@ runScGSEA <- function(data,gmt.file,nsim=1000,convertToEns=T,convertHu2Mm=F,nt=2
   
   return(data)
 }
+
+#' Remove previous scGSEA analysis
+#'
+#' Remove previous scGSEA analysis
+#' @export
+resetScGSEA <- function(){
+  data$scgsea <- NULL
+}
+

@@ -30,7 +30,7 @@ runScGSEA(
 
 \item{convertHu2Mm}{boolean: Convert gene sets from human symbols to Mouse Ensable id.}
 
-\item{nt}{numeric; Number of cpu to use for the GSEA}
+\item{nt}{numeric; Number of cpu to use for the GSEA and NMF}
 
 \item{minSize}{numeric; Minimal size of a gene set to test (default 15). All pathways below the threshold are excluded.}
 

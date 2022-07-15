@@ -11,6 +11,7 @@ runNMF(
   use.odgenes = F,
   n.odgenes = NULL,
   plot.odgenes = F,
+  nt = 0,
   ...
 )
 }
@@ -26,6 +27,8 @@ runNMF(
 \item{n.odgenes}{integer; Number of overdispersed genes to use. A good choise seems to be usually between 1000 and 3000.}
 
 \item{plot.odgenes}{boolean; Show significant overdispersed genes respect to ICF values.}
+
+\item{nt}{numeric; Numbmber of thread to use (default is 0, i.e. all available CPU cores).}
 
 \item{...}{Additional arguments to pass to nfm call (see ?RcppML::nmf).}
 

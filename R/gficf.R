@@ -51,7 +51,7 @@ gficf = function(M=NULL,QCdata=NULL,cell_count_cutoff=5,cell_percentage_cutoff2=
 #' @importFrom edgeR DGEList calcNormFactors cpm
 #' @importFrom sva ComBat_seq
 #' 
-normCounts = function(M,cell_count_cutoff=5,cell_percentage_cutoff2=0.03,nonz_mean_cutoff=1.12,batches=NULL,groups=NULL,verbose=TRUE,filterGene=TRUE, ...)
+normCounts = function(M,cell_count_cutoff=5,cell_percentage_cutoff2=0.03,nonz_mean_cutoff=1.12,batches=NULL,groups=NULL,verbose=TRUE,filterGene=FALSE, ...)
 {
   ix = Matrix::rowSums(M!=0)
   

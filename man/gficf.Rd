@@ -14,6 +14,7 @@ gficf(
   batches = NULL,
   groups = NULL,
   verbose = TRUE,
+  filterGenes = TRUE,
   ...
 )
 }

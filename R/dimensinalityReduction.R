@@ -10,15 +10,18 @@
 #' @param use.odgenes boolean; Use only significant overdispersed genes respect to ICF values.
 #' @param n.odgenes integer; Number of overdispersed genes to use. A good choise seems to be usually between 1000 and 3000.
 #' @param plot.odgenes boolean; Show significant overdispersed genes respect to ICF values.
+#' @param nt numeric; Numbmber of thread to use (default is 0, i.e. all available CPU cores).
 #' @param ... Additional arguments to pass to nfm call (see ?RcppML::nmf).
 #' @return The updated gficf object.
 #' @importFrom RcppML nmf
 #' @import Matrix
 #' 
 #' @export
-runNMF = function(data,dim=NULL,seed=180582,use.odgenes=F,n.odgenes=NULL,plot.odgenes=F, ...)
+runNMF = function(data,dim=NULL,seed=180582,use.odgenes=F,n.odgenes=NULL,plot.odgenes=F, nt=0, ...)
 {
   if(use.odgenes & is.null(data$rawCounts)) {stop("Raw Counts absent! Please run gficf normalization with storeRaw = T")}
+  
+  options(RcppML.threads = nt)
   
   if (is.null(dim))
   {
@@ -59,6 +62,7 @@ runNMF = function(data,dim=NULL,seed=180582,use.odgenes=F,n.odgenes=NULL,plot.od
   data$pca$centre <- F # for legacy
   data$pca$rescale <- F # for legacy
   data$pca$type = "NMF"
+  data$pca$use.odgenes = use.odgenes
   
   if(use.odgenes) {rownames(data$pca$genes)=odgenes} else {rownames(data$pca$genes) = rownames(data$gficf)}
   rownames(data$pca$cells) = colnames(data$gficf)
@@ -125,6 +129,7 @@ runPCA = function(data,dim=NULL,var.scale=F,centre=F,seed=180582,use.odgenes=F,n
   data$pca$centre <- centre
   data$pca$rescale <- F
   data$pca$genes <- x$v
+  data$pca$use.odgenes = use.odgenes
   rm(x); gc()
   data$pca$type = "PCA"
   if(use.odgenes) {rownames(data$pca$genes)=odgenes} else {rownames(data$pca$genes) = rownames(data$gficf)}
