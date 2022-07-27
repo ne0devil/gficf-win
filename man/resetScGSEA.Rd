@@ -4,7 +4,10 @@
 \alias{resetScGSEA}
 \title{Remove previous scGSEA analysis}
 \usage{
-resetScGSEA()
+resetScGSEA(data)
+}
+\arguments{
+\item{data}{list; GFICF object}
 }
 \description{
 Remove previous scGSEA analysis

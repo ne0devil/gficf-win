@@ -1,4 +1,5 @@
-#' @importFrom  biomaRt useMart getBM getLDS
+#' @import AnnotationHub
+#' @importFrom  babelgene orthologs
 gmtPathways <- function(gmt.file,convertToEns,convertHu2Mm,verbose)
 {
   pathwayLines <- strsplit(readLines(gmt.file), "\t")
@@ -7,11 +8,16 @@ gmtPathways <- function(gmt.file,convertToEns,convertHu2Mm,verbose)
   
   if (convertToEns & !convertHu2Mm)
   {
+    tsmessage("... Retrieving gene annotation from AnnotationHub()",verbose = verbose)
+    ah <- AnnotationHub::AnnotationHub()
+    ahDb <- AnnotationHub::query(ah,pattern = c("Homo sapiens","EnsDb"), ignore.case = TRUE)
+    id <- tail(rownames(mcols(ahDb)),n=1)
+    edb <- ah[[id]]
+    # Extract gene-level information from database
+    ens.map <- subset(genes(edb,return.type = "data.frame"),seq_name%in%c(as.character(1:22),"X","Y","MT") & !gene_biotype%in%"LRG_gene")
     tsmessage(".. Start converting human symbols to human ensamble id",verbose = verbose)
     g = as.character(unique(unlist(pathways)))
-    ensembl = biomaRt::useMart("ensembl",dataset="hsapiens_gene_ensembl")
-    ens.map = biomaRt::getBM(attributes=c('ensembl_gene_id','hgnc_symbol'),filters = 'hgnc_symbol',values = g,mart = ensembl,verbose = F)
-    pathways = lapply(pathways, function(x,y=ens.map){r=y$ensembl_gene_id[y$hgnc_symbol%in%x];r=r[!is.na(r)];return(unique(r))})
+    pathways = lapply(pathways, function(x,y=ens.map){r=y$gene_id[y$gene_name%in%x];r=r[!is.na(r)];return(unique(r))})
     tsmessage("Done!",verbose = verbose)
   }
   
@@ -19,10 +25,9 @@ gmtPathways <- function(gmt.file,convertToEns,convertHu2Mm,verbose)
   {
     tsmessage(".. Start converting human symbols to mouse ensamble id",verbose = verbose)
     g = as.character(unique(unlist(pathways)))
-    human = biomaRt::useMart("ensembl", dataset = "hsapiens_gene_ensembl")
-    mouse = biomaRt::useMart("ensembl", dataset = "mmusculus_gene_ensembl")
-    map.gene = biomaRt::getLDS(attributes = "hgnc_symbol",filters = "hgnc_symbol", values = g,mart = human,attributesL = "ensembl_gene_id", martL = mouse,verbose = F)
-    pathways = lapply(pathways, function(x,y=map.gene) {r = unique(y$Gene.stable.ID[y$HGNC.symbol%in%x]);return(r[!is.na(r)])})
+    g = g[!startsWith(g,prefix = "ENSG")] 
+    map.gene = babelgene::orthologs(genes = g,species = "mouse")
+    pathways = lapply(pathways, function(x,y=map.gene) {r = unique(y$ensembl[y$human_symbol%in%x]);return(r[!is.na(r)])})
     tsmessage("Done!",verbose = verbose)
   }
   
@@ -30,10 +35,8 @@ gmtPathways <- function(gmt.file,convertToEns,convertHu2Mm,verbose)
   {
     tsmessage(".. Start converting human symbols to mouse symbols",verbose = verbose)
     g = as.character(unique(unlist(pathways)))
-    human = biomaRt::useMart("ensembl", dataset = "hsapiens_gene_ensembl")
-    mouse = biomaRt::useMart("ensembl", dataset = "mmusculus_gene_ensembl")
-    map.gene = biomaRt::getLDS(attributes = "hgnc_symbol",filters = "hgnc_symbol", values = g,mart = human,attributesL = "mgi_symbol", martL = mouse,verbose = F)
-    pathways = lapply(pathways, function(x,y=map.gene) {r = unique(y$MGI.symbol[y$HGNC.symbol%in%x]);return(r[!is.na(r)])})
+    map.gene = babelgene::orthologs(genes = g,species = "mouse")
+    pathways = lapply(pathways, function(x,y=map.gene) {r = unique(y$symbol[y$human_symbol%in%x]);return(r[!is.na(r)])})
     tsmessage("Done!",verbose = verbose)
   }
   
@@ -172,7 +175,7 @@ runScGSEA <- function(data,gmt.file,nsim=1000,convertToEns=T,convertHu2Mm=F,nt=2
     data$scgsea = list()
     if (data$pca$type == "NMF"){
       if (data$dimPCA<nmf.k || data$pca$use.odgenes) {
-        tsmessage("... Performing NMF",verbose=T)
+        tsmessage("... Performing NMF",verbose=verbose)
         tmp = RcppML::nmf(data = data$gficf,k=nmf.k)
         data$scgsea$nmf.w <- Matrix::Matrix(data = tmp@w,sparse = T)
         data$scgsea$nmf.h <- t(Matrix::Matrix(data = tmp@h,sparse = T))
@@ -186,6 +189,7 @@ runScGSEA <- function(data,gmt.file,nsim=1000,convertToEns=T,convertHu2Mm=F,nt=2
         rm(tmp,tmp2);gc()
       }
     } else {
+      tsmessage("... Performing NMF",verbose=verbose)
       data$scgsea$nmf.w = Matrix::Matrix(data = t(RcppML::nmf(data = data$gficf,k=nmf.k)$w),sparse = T)
     }
   } else {
@@ -234,8 +238,10 @@ runScGSEA <- function(data,gmt.file,nsim=1000,convertToEns=T,convertHu2Mm=F,nt=2
 #' Remove previous scGSEA analysis
 #'
 #' Remove previous scGSEA analysis
+#' @param data list; GFICF object
 #' @export
-resetScGSEA <- function(){
+resetScGSEA <- function(data){
   data$scgsea <- NULL
+  return(data)
 }
 

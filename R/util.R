@@ -49,33 +49,39 @@ tsmessage <- function(..., domain = NULL, appendLF = TRUE, verbose = TRUE,time_s
 #' @param verbose boolean; Icrease verbosity.
 #' @return The updated data frame with a new column called symb.
 #'
-#' @importFrom  biomaRt useMart getBM
+#' @import AnnotationHub
 #' @import fastmatch
 #' 
 #' @export
 ensToSymbol = function(df,col,organism,verbose=T)
 {
+  organism = tolower(organism)
   organism = base::match.arg(arg = organism,choices = c("human","mouse"),several.ok = F)
+  org.map = c("Homo Sapiens","Mus Musculus")
+  names(org.map) = c("human","mouse")
+  
+  tsmessage("... Retrieving gene annotation from AnnotationHub()",verbose = verbose)
+  ah <- AnnotationHub::AnnotationHub()
+  ahDb <- AnnotationHub::query(ah,pattern = c(org.map[organism],"EnsDb"), ignore.case = TRUE)
+  id <- tail(rownames(mcols(ahDb)),n=1)
+  edb <- ah[[id]]
+  ens.map <- subset(genes(edb,return.type = "data.frame"),seq_name%in%c(as.character(1:22),"X","Y","MT") & !gene_biotype%in%"LRG_gene")
   
   if(organism %in% "human")
   {
-    tsmessage(".. Start converting human ens to human symbol",verbose = verbose)
+    tsmessage(".. Start converting human symbols to human ensamble id",verbose = verbose)
     g = unique(as.character(df[,col]))
-    ensembl = biomaRt::useMart("ensembl",dataset="hsapiens_gene_ensembl")
-    ens.map = biomaRt::getBM(attributes=c('ensembl_gene_id','hgnc_symbol'),filters = 'ensembl_gene_id',values = g,mart = ensembl,verbose = F)
     df$symb = NA
-    df$symb = ens.map$hgnc_symbol[fastmatch::fmatch(df[,col],ens.map$ensembl_gene_id)]
+    df$symb = ens.map$gene_name[fastmatch::fmatch(df[,col],ens.map$gene_id)]
     tsmessage("Done!",verbose = verbose)
   }
   
   if (organism %in% "mouse")
   {
     tsmessage(".. Start converting human symbols to mouse ensamble id",verbose = verbose)
-    g = as.character(unique(unlist(pathways)))
-    ensembl = biomaRt::useMart("ensembl", dataset = "mmusculus_gene_ensembl")
-    ens.map = biomaRt::getBM(attributes=c('ensembl_gene_id','mgi_symbol'),filters = 'ensembl_gene_id',values = g,mart = ensembl,verbose = F)
+    g = unique(as.character(df[,col]))
     df$symb = NA
-    df$symb = ens.map$mgi_symbol[fastmatch::fmatch(df[,col],ens.map$ensembl_gene_id)]
+    df$symb = ens.map$gene_name[fastmatch::fmatch(df[,col],ens.map$gene_id)]
     tsmessage("Done!",verbose = verbose)
   }
   
