@@ -190,10 +190,13 @@ runScGSEA <- function(data,gmt.file,nsim=1000,convertToEns=T,convertHu2Mm=F,nt=2
       }
     } else {
       tsmessage("... Performing NMF",verbose=verbose)
-      data$scgsea$nmf.w = Matrix::Matrix(data = t(RcppML::nmf(data = data$gficf,k=nmf.k)$w),sparse = T)
+      tmp = RcppML::nmf(data = data$gficf,k=nmf.k)
+      data$scgsea$nmf.w <- Matrix::Matrix(data = tmp@w,sparse = T)
+      data$scgsea$nmf.h <- t(Matrix::Matrix(data = tmp@h,sparse = T))
+      rm(tmp);gc()
     }
   } else {
-    stop("Found a previus scGSEA please call resetScGSEA first!")
+    stop("Found a previous scGSEA please call resetScGSEA first!")
   }
   
   tsmessage("Loading pathways...",verbose=verbose)
