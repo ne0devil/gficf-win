@@ -35,6 +35,7 @@ gmtPathways <- function(gmt.file,convertToEns,convertHu2Mm,verbose)
   {
     tsmessage(".. Start converting human symbols to mouse symbols",verbose = verbose)
     g = as.character(unique(unlist(pathways)))
+    g = g[!startsWith(g,prefix = "ENSG")]
     map.gene = babelgene::orthologs(genes = g,species = "mouse")
     pathways = lapply(pathways, function(x,y=map.gene) {r = unique(y$symbol[y$human_symbol%in%x]);return(r[!is.na(r)])})
     tsmessage("Done!",verbose = verbose)
@@ -166,31 +167,41 @@ runGSEA <- function(data,gmt.file,nsim=1000,convertToEns=T,convertHu2Mm=F,nt=2,m
 #' @import utils
 #' @import pointr
 #' @export
-runScGSEA <- function(data,gmt.file,nsim=1000,convertToEns=T,convertHu2Mm=F,nt=2,minSize=15,maxSize=Inf,verbose=TRUE,seed=180582,nmf.k=100,fdr.th=0.05)
+runScGSEA <- function(data,gmt.file,nsim=1000,convertToEns=T,convertHu2Mm=F,nt=2,minSize=15,maxSize=Inf,verbose=TRUE,seed=180582,nmf.k=100,fdr.th=0.05,gp=0)
 {
   options(RcppML.threads = nt)
+  use.for.nmf="gficf"
   
   if (is.null(data$scgsea))
   {
     data$scgsea = list()
-    if (data$pca$type == "NMF"){
-      if (data$dimPCA<nmf.k || data$pca$use.odgenes) {
+    if (use.for.nmf=="gficf")
+    {
+      if (data$pca$type == "NMF"){
+        if (data$dimPCA<nmf.k || data$pca$use.odgenes) {
+          tsmessage("... Performing NMF",verbose=verbose)
+          tmp = RcppML::nmf(data = data$gficf,k=nmf.k)
+          data$scgsea$nmf.w <- Matrix::Matrix(data = tmp@w,sparse = T)
+          data$scgsea$nmf.h <- t(Matrix::Matrix(data = tmp@h,sparse = T))
+          rm(tmp);gc()
+        } else {
+          tsmessage(paste0("Found NMF reduction with k greaten or equal to ", nmf.k),verbose=T)
+          pointr::ptr("tmp", "data$pca$genes")
+          data$scgsea$nmf.w = tmp
+          pointr::ptr("tmp2", "data$pca$cells")
+          data$scgsea$nmf.h = tmp2
+          rm(tmp,tmp2);gc()
+        }
+      } else {
         tsmessage("... Performing NMF",verbose=verbose)
         tmp = RcppML::nmf(data = data$gficf,k=nmf.k)
         data$scgsea$nmf.w <- Matrix::Matrix(data = tmp@w,sparse = T)
         data$scgsea$nmf.h <- t(Matrix::Matrix(data = tmp@h,sparse = T))
         rm(tmp);gc()
-      } else {
-        tsmessage(paste0("Found NMF reduction with k greaten or equal to ", nmf.k),verbose=T)
-        pointr::ptr("tmp", "data$pca$genes")
-        data$scgsea$nmf.w = tmp
-        pointr::ptr("tmp2", "data$pca$cells")
-        data$scgsea$nmf.h = tmp2
-        rm(tmp,tmp2);gc()
       }
     } else {
       tsmessage("... Performing NMF",verbose=verbose)
-      tmp = RcppML::nmf(data = data$gficf,k=nmf.k)
+      tmp = RcppML::nmf(data = log1p(data$rawCounts),k=nmf.k)
       data$scgsea$nmf.w <- Matrix::Matrix(data = tmp@w,sparse = T)
       data$scgsea$nmf.h <- t(Matrix::Matrix(data = tmp@h,sparse = T))
       rm(tmp);gc()
@@ -212,7 +223,7 @@ runScGSEA <- function(data,gmt.file,nsim=1000,convertToEns=T,convertHu2Mm=F,nt=2
   pb = utils::txtProgressBar(min = 0, max = ncol(data$scgsea$nmf.w), initial = 0,style = 3) 
   for (i in 1:ncol(data$scgsea$nmf.w))
   {
-      df = as.data.frame(fgsea::fgseaMultilevel(pathways = data$scgsea$pathways,stats = data$scgsea$nmf.w[,i],nPermSimple = nsim,gseaParam = 1,nproc = nt,minSize = minSize,maxSize = maxSize))[,1:7]
+      df = as.data.frame(fgsea::fgseaMultilevel(pathways = data$scgsea$pathways,stats = data$scgsea$nmf.w[,i],nPermSimple = nsim,gseaParam = gp,nproc = nt,minSize = minSize,maxSize = maxSize))[,1:7]
       data$scgsea$es[df$pathway,i] = df$ES
       data$scgsea$nes[df$pathway,i] = df$NES
       data$scgsea$pval[df$pathway,i] = df$pval
