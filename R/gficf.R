@@ -70,7 +70,11 @@ normCounts = function(M,cell_count_cutoff=5,cell_percentage_cutoff2=0.03,nonz_me
     }
     tsmessage("Normalize counts..",verbose = verbose)
     M <- Matrix::Matrix(edgeR::cpm(edgeR::calcNormFactors(edgeR::DGEList(counts=M),normalized.lib.sizes = T)),sparse = T) 
+  } else {
+    data$rawCounts <- data$counts
+    data$counts <- NULL; gc()
   }
+  
   return(M)
 }
 
@@ -87,14 +91,19 @@ normCountsData = function(data,cell_count_cutoff=5,cell_percentage_cutoff2=0.03,
     data$counts = filter_genes_cell2loc_style(data = data$counts,cell_count_cutoff,cell_percentage_cutoff2,nonz_mean_cutoff)
   }
   
-  if(!is.null(batches)){
-    tsmessage("Correcting batches..",verbose = verbose)
-    data$counts = Matrix::Matrix(data = sva::ComBat_seq(counts = as.matrix(data$counts),batch = batches,group = groups, ...),sparse = T)
-    gc()
+  if (normalizeCounts) 
+  {
+    if(!is.null(batches)){
+      tsmessage("Correcting batches..",verbose = verbose)
+      data$counts = Matrix::Matrix(data = sva::ComBat_seq(counts = as.matrix(data$counts),batch = batches,group = groups, ...),sparse = T)
+      gc()
+    }
+    tsmessage("Normalize counts..",verbose = verbose)
+    data$rawCounts <- Matrix::Matrix(edgeR::cpm(edgeR::calcNormFactors(edgeR::DGEList(counts=data$counts),normalized.lib.sizes = T)),sparse = T) 
+  } else {
+    data$rawCounts <- data$counts
+    data$counts <- NULL; gc()
   }
-  
-  tsmessage("Normalize counts..",verbose = verbose)
-  data$rawCounts <- Matrix::Matrix(edgeR::cpm(edgeR::calcNormFactors(edgeR::DGEList(counts=data$counts),normalized.lib.sizes = T)),sparse = T) 
   
   if(is.null(batches)){data$counts=NULL;gc()}
   
