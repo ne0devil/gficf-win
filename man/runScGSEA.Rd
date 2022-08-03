@@ -7,7 +7,7 @@
 runScGSEA(
   data,
   gmt.file,
-  nsim = 1000,
+  nsim = 10000,
   convertToEns = T,
   convertHu2Mm = F,
   nt = 2,
@@ -16,7 +16,8 @@ runScGSEA(
   verbose = TRUE,
   seed = 180582,
   nmf.k = 100,
-  fdr.th = 0.05
+  fdr.th = 0.05,
+  gp = 0
 )
 }
 \arguments{

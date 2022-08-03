@@ -171,6 +171,7 @@ runScGSEA <- function(data,gmt.file,nsim=10000,convertToEns=T,convertHu2Mm=F,nt=
 {
   options(RcppML.threads = nt)
   use.for.nmf="gficf"
+  set.seed(seed)
   
   if (is.null(data$scgsea))
   {
