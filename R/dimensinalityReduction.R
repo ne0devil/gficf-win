@@ -254,9 +254,8 @@ findOverDispersed=function(data,gam.k=5, alpha=5e-2, plot=FALSE, use.unadjusted.
   rowSel <- NULL;
   
   tsmessage("calculating variance fit ...",verbose=verbose)
-  df = data.frame(m=data$w,v=apply(data$rawCounts, 1, var),nobs=Matrix::rowSums(data$rawCounts!=0),stringsAsFactors = F)
+  df = colMeanVarS(t(data$rawCounts),rowSel = NULL,ncores = 2)
   df$m = data$w
-  
   
   # gene-relative normalizaton
   df$v <- log(df$v);

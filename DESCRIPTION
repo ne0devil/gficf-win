@@ -10,7 +10,7 @@ Encoding: UTF-8
 LazyData: true
 RoxygenNote: 7.2.1
 Depends: R (>= 3.6), Matrix, RcppML
-LinkingTo: Rcpp (>= 0.11.0), RcppGSL, RcppProgress, RcppParallel, RcppEigen
+LinkingTo: RcppArmadillo, Rcpp (>= 0.11.0), RcppGSL, RcppProgress, RcppParallel, RcppEigen
 biocViews:
 Imports: 
     uwot,
