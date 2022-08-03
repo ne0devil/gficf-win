@@ -10,11 +10,12 @@ gficf(
   cell_count_cutoff = 5,
   cell_percentage_cutoff2 = 0.03,
   nonz_mean_cutoff = 1.12,
+  normalize = TRUE,
   storeRaw = TRUE,
   batches = NULL,
   groups = NULL,
-  verbose = TRUE,
   filterGenes = TRUE,
+  verbose = TRUE,
   ...
 )
 }
@@ -29,11 +30,15 @@ gficf(
 
 \item{nonz_mean_cutoff}{numeric genes detected in the number of cells between the above mentioned cutoffs are selected only when their average expression in non-zero cells is above this cutoff (default 1.12).}
 
+\item{normalize}{logical; Rescale UMI counts before applay GFICF. Recaling is done using EdgeR normalization.}
+
 \item{storeRaw}{logical; Store UMI counts.}
 
 \item{batches}{vector; Vector or factor for batch.}
 
 \item{groups}{vector; Vector or factor for biological condition of interest.}
+
+\item{filterGenes}{logical; Applay gene filter (default TRUE).}
 
 \item{verbose}{boolean; Increase verbosity.}
 

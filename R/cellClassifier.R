@@ -54,7 +54,9 @@ embedNewCells = function(data,x,nt=2,seed=18051982, verbose=TRUE, ...)
   rm(g)
   
   tsmessage("Normalize counts..",verbose = verbose)
-  x <- Matrix::Matrix(edgeR::cpm(edgeR::calcNormFactors(edgeR::DGEList(counts=x),normalized.lib.sizes = T)),sparse = T)
+  if (data$param$normalized){
+    x <- Matrix::Matrix(edgeR::cpm(edgeR::calcNormFactors(edgeR::DGEList(counts=x),normalized.lib.sizes = T)),sparse = T)
+  }
   
   x = tf(x,verbose=verbose)
   x = idf(x,w = data$w,verbose=verbose)
