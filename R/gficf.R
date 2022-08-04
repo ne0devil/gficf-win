@@ -1,21 +1,21 @@
 #' Gene Frequency - Inverse Cell Frequency (GF-ICF)
 #'
-#' R implementation of the GF-ICF (https://www.frontiersin.org/articles/10.3389/fgene.2019.00734/abstract)
+#' R implementation of the GF-ICF
 #' Thanks to 3’-end scRNA-seq approaches, we can now have an accurate estimation of gene expression without having to account for gene length,
 #' thus the number of transcripts (i.e. UMI) associated to each gene, strictly reflects the frequency of a gene in a cell, exactly like a word in a document.
-#' GFICF (Gene Frequency - Inverce Cell Frequency) is analugous of TF-IDF scoring method as defined for tex dada. With GFICF we consider a cell to be analogous
-#' to a document, genes analogous to words and gene counts to be analogous of the word’s occurrence in a document.
+#' GFICF (Gene Frequency - Inverse Cell Frequency) is analogous of TF-IDF scoring method as defined for tex mining With GFICF we consider a cell to be
+#' analogous to a document, genes analogous to words and gene counts to be analogous of the word’s occurrence in a document.
 #' 
 #' @param M Matrix; UMI cell count matrix
 #' @param QCdata list; QC cell object. 
 #' @param cell_count_cutoff numeric; All genes detected in less than cell_count_cutoff cells will be excluded (default 5).
-#' @param cell_percentage_cutoff2 numeric; All genes detected in at least this percentage of cells will be included (default 0.03, i.e. 3% of cells).
+#' @param cell_percentage_cutoff2 numeric; All genes detected in at least this percentage of cells will be included (default 0.03, i.e. 3 percent of cells).
 #' @param nonz_mean_cutoff numeric genes detected in the number of cells between the above mentioned cutoffs are selected only when their average expression in non-zero cells is above this cutoff (default 1.12).
-#' @param  normalize logical; Rescale UMI counts before applay GFICF. Recaling is done using EdgeR normalization.
+#' @param  normalize logical; Rescale UMI counts before apply GFICF. Rescaling is done using EdgeR normalization.
 #' @param storeRaw logical; Store UMI counts.
 #' @param batches vector; Vector or factor for batch.
 #' @param groups vector; Vector or factor for biological condition of interest.
-#' @param filterGenes logical; Applay gene filter (default TRUE).
+#' @param filterGenes logical; Apply gene filter (default TRUE).
 #' @param verbose boolean; Increase verbosity.
 #' @param ... Additional arguments to pass to ComBat_seq call.
 #' @return The updated gficf object.
