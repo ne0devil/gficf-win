@@ -5,7 +5,7 @@ scaleMatrix = function(x,rescale,centre)
   if (FALSE)
   {
     message("Rescaling..")
-    bc_tot <- Matrix::rowSums(x)
+    bc_tot <- armaRowSum(x)
     median_tot <- stats::median(bc_tot)
     x <- base::sweep(x, 1, median_tot/bc_tot, '*')
     message("Rescaling Done!")
@@ -108,8 +108,8 @@ progress_for <- function(n, tot,display) {
 # https://cell2location.readthedocs.io/en/latest/cell2location.utils.filtering.html
 filter_genes_cell2loc_style = function(data,cell_count_cutoff=5,cell_percentage_cutoff2=0.03,nonz_mean_cutoff=1.12)
 {
-  data = data[Matrix::rowSums(data)>0,]
-  csums = Matrix::rowSums(data!=0)
+  data = data[armaRowSum(data)>0,]
+  csums = armaRowSum(data!=0)
   gene_to_remove = csums <= cell_count_cutoff |  csums/ncol(data) <= cell_percentage_cutoff2
   gene_to_remove_step02= apply(data[gene_to_remove,], 1, function(x,th=nonz_mean_cutoff) mean(x[x!=0])<=th)
   data = data[!rownames(data)%in%names(gene_to_remove_step02)[gene_to_remove_step02],]
@@ -278,4 +278,31 @@ Read10X <- function(
     return(list_of_data)
   }
 }
+
+detectCores <- function() {
+  .Call("detectCoresCpp")
+}
+
+armaColSum <- function(M,nt=0,verbose=FALSE) {
+  res = NULL
+  c = class(M)
+  if (nt==0) {
+    nt=detectCores()
+    if (nt>1) {nt = nt-1}
+  }
+  if(c[1]=="matrix") {
+    res = armaColSumFull(M,nt,verbose)
+  } else {
+    if(c[1]!="dgCMatrix") {M = as(M,"dgCMatrix")}
+    res = armaColSumSparse(M,nt,verbose)
+  }
+  res = as.numeric(res)
+  names(res) = colnames(M)
+  return(res)
+}
+
+armaRowSum <- function(M,nt=0,verbose=FALSE) {
+  return(armaColSum(t(M),nt,verbose))
+}
+
 

@@ -44,16 +44,41 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// colMeanVarS
-Rcpp::DataFrame colMeanVarS(SEXP sY, SEXP rowSel, int ncores);
-RcppExport SEXP _gficf_colMeanVarS(SEXP sYSEXP, SEXP rowSelSEXP, SEXP ncoresSEXP) {
+// armaColSumFull
+arma::mat armaColSumFull(const arma::mat& m, int ncores, bool verbose);
+RcppExport SEXP _gficf_armaColSumFull(SEXP mSEXP, SEXP ncoresSEXP, SEXP verboseSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< SEXP >::type sY(sYSEXP);
-    Rcpp::traits::input_parameter< SEXP >::type rowSel(rowSelSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type m(mSEXP);
     Rcpp::traits::input_parameter< int >::type ncores(ncoresSEXP);
-    rcpp_result_gen = Rcpp::wrap(colMeanVarS(sY, rowSel, ncores));
+    Rcpp::traits::input_parameter< bool >::type verbose(verboseSEXP);
+    rcpp_result_gen = Rcpp::wrap(armaColSumFull(m, ncores, verbose));
+    return rcpp_result_gen;
+END_RCPP
+}
+// armaColSumSparse
+arma::mat armaColSumSparse(const arma::sp_mat& m, int ncores, bool verbose);
+RcppExport SEXP _gficf_armaColSumSparse(SEXP mSEXP, SEXP ncoresSEXP, SEXP verboseSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::sp_mat& >::type m(mSEXP);
+    Rcpp::traits::input_parameter< int >::type ncores(ncoresSEXP);
+    Rcpp::traits::input_parameter< bool >::type verbose(verboseSEXP);
+    rcpp_result_gen = Rcpp::wrap(armaColSumSparse(m, ncores, verbose));
+    return rcpp_result_gen;
+END_RCPP
+}
+// colMeanVarS
+Rcpp::DataFrame colMeanVarS(const arma::sp_mat& m, int ncores);
+RcppExport SEXP _gficf_colMeanVarS(SEXP mSEXP, SEXP ncoresSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::sp_mat& >::type m(mSEXP);
+    Rcpp::traits::input_parameter< int >::type ncores(ncoresSEXP);
+    rcpp_result_gen = Rcpp::wrap(colMeanVarS(m, ncores));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -96,13 +121,18 @@ BEGIN_RCPP
 END_RCPP
 }
 
+RcppExport SEXP detectCoresCpp();
+
 static const R_CallMethodDef CallEntries[] = {
     {"_gficf_RunModularityClusteringCpp", (DL_FUNC) &_gficf_RunModularityClusteringCpp, 9},
     {"_gficf_jaccard_coeff", (DL_FUNC) &_gficf_jaccard_coeff, 2},
-    {"_gficf_colMeanVarS", (DL_FUNC) &_gficf_colMeanVarS, 3},
+    {"_gficf_armaColSumFull", (DL_FUNC) &_gficf_armaColSumFull, 3},
+    {"_gficf_armaColSumSparse", (DL_FUNC) &_gficf_armaColSumSparse, 3},
+    {"_gficf_colMeanVarS", (DL_FUNC) &_gficf_colMeanVarS, 2},
     {"_gficf_rcpp_WMU_test", (DL_FUNC) &_gficf_rcpp_WMU_test, 3},
     {"_gficf_rcpp_parallel_jaccard_coef", (DL_FUNC) &_gficf_rcpp_parallel_jaccard_coef, 2},
     {"_gficf_rcpp_parallel_WMU_test", (DL_FUNC) &_gficf_rcpp_parallel_WMU_test, 3},
+    {"detectCoresCpp", (DL_FUNC) &detectCoresCpp, 0},
     {NULL, NULL, 0}
 };
 

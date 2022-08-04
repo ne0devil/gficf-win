@@ -15,7 +15,7 @@
 filterCells = function(counts,organism="Homo sapiens",plot=F,verbose=T) {
   organism = base::match.arg(arg = organism,choices = c("Homo sapiens","Mus musculus"),several.ok = F)
   
-  metadata = data.frame(cell.id = colnames(counts),nUMI=Matrix::colSums(counts),nGenes=Matrix::colSums(counts!=0),stringsAsFactors = F)
+  metadata = data.frame(cell.id = colnames(counts),nUMI=armaColSum(counts),nGenes=armaColSum(counts!=0),stringsAsFactors = F)
   rownames(metadata) = metadata$cell.id
   metadata$geneRatio = metadata$nGenes/metadata$nUMI
   
@@ -32,7 +32,7 @@ filterCells = function(counts,organism="Homo sapiens",plot=F,verbose=T) {
   # Extract IDs for mitochondrial genes
   mt = annotations$gene_id[annotations$seq_name%in%"MT"]
   # Number of UMIs assigned to mitochondrial genes
-  metadata$mtUMI <- Matrix::colSums(counts[which(rownames(counts) %in% mt),], na.rm = T)
+  metadata$mtUMI <- armaColSum(counts[which(rownames(counts) %in% mt),], na.rm = T)
   # Calculate of mitoRatio per cell
   metadata$mitoRatio <- metadata$mtUMI/metadata$nUMI
   

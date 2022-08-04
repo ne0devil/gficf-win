@@ -9,8 +9,16 @@ jaccard_coeff <- function(idx, printOutput) {
     .Call(`_gficf_jaccard_coeff`, idx, printOutput)
 }
 
-colMeanVarS <- function(sY, rowSel, ncores = 1L) {
-    .Call(`_gficf_colMeanVarS`, sY, rowSel, ncores)
+armaColSumFull <- function(m, ncores = 1L, verbose = FALSE) {
+    .Call(`_gficf_armaColSumFull`, m, ncores, verbose)
+}
+
+armaColSumSparse <- function(m, ncores = 1L, verbose = FALSE) {
+    .Call(`_gficf_armaColSumSparse`, m, ncores, verbose)
+}
+
+colMeanVarS <- function(m, ncores = 1L) {
+    .Call(`_gficf_colMeanVarS`, m, ncores)
 }
 
 rcpp_WMU_test <- function(M, idx1, idx2) {

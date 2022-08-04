@@ -55,8 +55,6 @@ gficf = function(M=NULL,QCdata=NULL,cell_count_cutoff=5,cell_percentage_cutoff2=
 #' 
 normCounts = function(M,cell_count_cutoff=5,cell_percentage_cutoff2=0.03,nonz_mean_cutoff=1.12,normalizeCounts=TRUE,batches=NULL,groups=NULL,verbose=TRUE,filterGene=FALSE, ...)
 {
-  ix = Matrix::rowSums(M!=0)
-  
   if (filterGene) {
     tsmessage("Gene filtering..",verbose = verbose)
     M = filter_genes_cell2loc_style(data = M,cell_count_cutoff,cell_percentage_cutoff2,nonz_mean_cutoff)
@@ -84,8 +82,6 @@ normCounts = function(M,cell_count_cutoff=5,cell_percentage_cutoff2=0.03,nonz_me
 #' 
 normCountsData = function(data,cell_count_cutoff=5,cell_percentage_cutoff2=0.03,nonz_mean_cutoff=1.12,normalizeCounts=TRUE,batches=NULL,groups=NULL,verbose=TRUE,filterGene= TRUE, ...)
 {
-  ix = Matrix::rowSums(data$counts!=0)
-  
   if (filterGene) {
     tsmessage("Gene filtering..",verbose = verbose)
     data$counts = filter_genes_cell2loc_style(data = data$counts,cell_count_cutoff,cell_percentage_cutoff2,nonz_mean_cutoff)
@@ -116,7 +112,7 @@ tf = function(M,verbose)
 {
 
   tsmessage("Apply GF transformation..",verbose = verbose)
-  M =t(t(M) / Matrix::colSums(M))
+  M =t(t(M) / armaColSum(M))
   
   return(M)
 }
@@ -145,7 +141,7 @@ idf = function(M,w,verbose)
 getIdfW = function(M,type="classic",verbose)
 {
   tsmessage("Compute ICF weigth..",verbose = verbose)
-  nt = Matrix::rowSums(M!=0)
+  nt = armaRowSum(M!=0)
   if (type == "classic") {w = log( (ncol(M)+1) / (nt+1) );rm(nt)}
   if (type == "prob") {w = log( (ncol(M) - nt) / nt );rm(nt)}
   if (type == "smooth") {w = log( 1 + ncol(M)/nt );rm(nt)}
@@ -157,7 +153,7 @@ getIdfW = function(M,type="classic",verbose)
 l.norm = function (m, norm = c("l1", "l2"),verbose) 
 {
   tsmessage(paste("Apply",norm),verbose = verbose)
-  norm_vec = switch(norm, l1 = 1/rowSums(m), l2 = 1/sqrt(rowSums(m^2)))
+  norm_vec = switch(norm, l1 = 1/armaRowSum(m), l2 = 1/sqrt(armaRowSum(m^2)))
   norm_vec[is.infinite(norm_vec)] = 0
   if (inherits(m, "sparseMatrix")) 
     Diagonal(x = norm_vec) %*% m

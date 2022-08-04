@@ -155,7 +155,7 @@ plotGSEA = function(data,fdr=.05,clusterRowCol=F)
   if (is.null(data$gsea)) {stop("Please run runGSEA function first")}
   nes = data$gsea$nes
   nes[data$gsea$es<=0 | data$gsea$fdr>=fdr] = 0
-  nes = nes[Matrix::rowSums(nes)>0,]
+  nes = nes[armaRowSum(nes)>0,]
   
   if (clusterRowCol)
   {
@@ -194,7 +194,7 @@ plotPathway = function(data,pathwayName,fdr=.05)
   if (is.null(data$gsea)) {stop("Please run runGSEA function first")}
   nes = data$gsea$nes
   nes[data$gsea$es<=0 | data$gsea$fdr>=fdr] = 0 
-  nes = nes[Matrix::rowSums(nes)>0,]
+  nes = nes[armaRowSum(nes)>0,]
   nes = nes[pathwayName,]
   df = data$embedded
   df$NES = nes[match(df$cluster,names(nes))]

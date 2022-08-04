@@ -120,7 +120,7 @@ clustcells <- function(data,from.embedded=F,k=15,dist.method="manhattan",nt=2,co
   tsmessage("Computing Cluster Signatures...",verbose = verbose)
   cluster.map = data$embedded$cluster
   u = base::unique(cluster.map)
-  data$cluster.gene.rnk = base::sapply(u, function(x,y=data$gficf,z=cluster.map) Matrix::rowSums(y[,z%in%x]))
+  data$cluster.gene.rnk = base::sapply(u, function(x,y=data$gficf,z=cluster.map) armaRowSum(y[,z%in%x]))
   
   tsmessage(paste("Detected Clusters:",length(unique(data$embedded$cluster))),verbose = verbose)
   

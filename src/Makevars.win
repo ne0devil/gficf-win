@@ -8,3 +8,8 @@ PKG_LIBS= -L$(GSL_LIBS)/lib/x64 -lgsl -lgslcblas
 # RcppParallel
 PKG_CXXFLAGS += -DRCPP_PARALLEL_USE_TBB=1 -DSTRICT_R_HEADERS
 PKG_LIBS += $(shell "${R_HOME}/bin${R_ARCH_BIN}/Rscript.exe" -e "RcppParallel::RcppParallelLibs()")
+
+# OMP
+PKG_CXXFLAGS += -I"./include" $(SHLIB_OPENMP_CXXFLAGS)
+PKG_LIBS += $(SHLIB_OPENMP_CXXFLAGS)
+PKG_CPPFLAGS += -DARMA_64BIT_WORD=1

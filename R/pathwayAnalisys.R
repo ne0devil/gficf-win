@@ -120,7 +120,7 @@ runGSEA <- function(data,gmt.file,nsim=1000,convertToEns=T,convertHu2Mm=F,nt=2,m
       rm(res)
     }
     options(warn=0)
-    data$gsva$res = data$gsva$res[Matrix::rowSums(data$gsva$res!=0)>0,]
+    data$gsva$res = data$gsva$res[armaRowSum(data$gsva$res!=0)>0,]
     
     tsmessage("Start executiong Limma cluster by cluster",verbose=verbose)
     for (i in 1:length(u))
@@ -245,7 +245,7 @@ runScGSEA <- function(data,gmt.file,nsim=10000,convertToEns=T,convertHu2Mm=F,nt=
   data$scgsea$x = Matrix::Matrix(data = data$scgsea$nmf.h %*% t(data$scgsea$x),sparse = T)
   
   data$scgsea$stat = df[,c("pathway","size")]
-  data$scgsea$x = data$scgsea$x[,colSums(data$scgsea$x)>0]
+  data$scgsea$x = data$scgsea$x[,armaColSum(data$scgsea$x)>0]
   
   return(data)
 }
