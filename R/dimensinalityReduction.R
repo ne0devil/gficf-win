@@ -21,6 +21,7 @@ runNMF = function(data,dim=NULL,seed=180582,use.odgenes=F,n.odgenes=NULL,plot.od
 {
   if(use.odgenes & is.null(data$rawCounts)) {stop("Raw Counts absent! Please run gficf normalization with storeRaw = T")}
   
+  if (nt==0) {nt = ifelse(detectCores()>1,detectCores()-1,1)}
   options(RcppML.threads = nt)
   
   if (is.null(dim))
