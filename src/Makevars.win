@@ -2,11 +2,11 @@
 CXX_STD = CXX11
 
 # RcppGSL
-PKG_CPPFLAGS= -I$(GSL_LIBS)/include -I../inst/include
+PKG_CPPFLAGS= -I$(GSL_LIBS)/include
 PKG_LIBS= -L$(GSL_LIBS)/lib/x64 -lgsl -lgslcblas 
 
 # RcppParallel
-PKG_CXXFLAGS += -DRCPP_PARALLEL_USE_TBB=1 -DSTRICT_R_HEADERS
+PKG_CXXFLAGS += -DRCPP_PARALLEL_USE_TBB=1 -DSTRICT_R_HEADERS -DRCPP_NO_RTTI
 PKG_LIBS += $(shell "${R_HOME}/bin${R_ARCH_BIN}/Rscript.exe" -e "RcppParallel::RcppParallelLibs()")
 
 # OMP
