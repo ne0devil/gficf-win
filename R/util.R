@@ -286,10 +286,7 @@ detectCores <- function() {
 armaColSum <- function(M,nt=0,verbose=FALSE) {
   res = NULL
   c = class(M)
-  if (nt==0) {
-    nt=detectCores()
-    if (nt>1) {nt = nt-1}
-  }
+  if (nt==0) {ifelse(detectCores()>1,detectCores()-1,1)}
   if(c[1]=="matrix") {
     res = armaColSumFull(M,nt,verbose)
   } else {
