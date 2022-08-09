@@ -193,7 +193,8 @@ saveGFICF <- function(data, file, verbose = TRUE)
         uwot_dir <- file.path(gficf_dir, "uwot")
         dir.create(uwot_dir,recursive = T)
         uwot_tmpfname <- file.path(uwot_dir,"uwot_obj")
-        uwot::save_uwot(model = data$uwot,file = uwot_tmpfname,verbose = verbose)
+        uwot::save_uwot(model = data$uwot,file = uwot_tmpfname,verbose = verbose,unload = T)
+        data$uwot <-uwot::load_uwot(file = uwot_tmpfname, verbose = verbose)
       }
     }
     
