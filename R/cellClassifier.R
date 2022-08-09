@@ -15,17 +15,18 @@
 classify.cells = function(data,classes,k=7,seed=18051982,method="embedded")
 {
   method = base::match.arg(arg = method,choices = c("subspace","embedded"),several.ok = F)
-  if (sum(colnames(data$embedded)%in%"predicted") == 0) {stop("Please embed first new cells!")}
+  if (is.null(data$embedded.predicted)) {stop("Please embed first new cells!")}
   set.seed(seed)
-  classes = factor(as.character(classes))
+  if(!is.factor(classes)) {classes = factor(as.character(classes))}
   if (method%in%"subspace")
   {
     res = class::knn(data$pca$cells,data$pca$pred,classes,k = k,prob = T) 
   } else {
-    res = class::knn(data$embedded[data$embedded$predicted%in%"NO",c(1,2)],data$embedded[data$embedded$predicted%in%"YES",c(1,2)],classes,k = k,prob = T)
+    res = class::knn(data$embedded[,c(1,2)],data$embedded.predicted[,c(1,2)],classes,k = k,prob = T)
   }
-  df = data.frame(cell.id=rownames(data$pca$pred),pred=as.character(res),prob=attr(res,"prob"),stringsAsFactors = F)
-  return(df)
+  data$embedded.predicted$predicted.class <- as.character(res)
+  data$embedded.predicted$class.prob <- attr(res,"prob")
+  return(data)
 }
 
 #' Embed new cells in an existing space 
@@ -48,6 +49,8 @@ classify.cells = function(data,classes,k=7,seed=18051982,method="embedded")
 #' @export
 embedNewCells = function(data,x,nt=2,seed=18051982, verbose=TRUE, ...)
 {
+  if(data$reduction=="tsne") {stop("Not supported with t-SNE reduction!!")}
+  
   tsmessage("Gene filtering..",verbose = verbose)
   g = union(rownames(filter_genes_cell2loc_style(data = x,data$param$cell_count_cutoff,data$param$cell_percentage_cutoff2,data$param$nonz_mean_cutoff)),rownames(data$gficf))
   x = x[rownames(x)%in%g,]
@@ -73,37 +76,16 @@ embedNewCells = function(data,x,nt=2,seed=18051982, verbose=TRUE, ...)
     x = t(RcppML::predict.nmf(w = data$pca$genes,data = x))
     rownames(x) = cells
   } else {
-    x = t(x) %*% data$pca$genes
+    x = t(x[rownames(data$pca$genes),]) %*% data$pca$genes
   }
-  gc()
-  
+
   if(data$reduction%in%c("tumap","umap")) {
-    df = as.data.frame(uwot::umap_transform(as.matrix(x),data$uwot,verbose = verbose))
-    rownames(df) = rownames(x)
-    colnames(df) = c("X","Y")
+    data$embedded.predicted = as.data.frame(uwot::umap_transform(as.matrix(x),data$uwot,verbose = verbose))
+    rownames(data$embedded.predicted) = rownames(x)
+    colnames(data$embedded.predicted) = c("X","Y")
   }
   
-  if(data$reduction=="tsne") {
-    warning("Not Fully supported!! With t-SNE only PCA/LSA components are predicted while t-SNE is re-run again!")
-    set.seed(seed)
-    df = base::as.data.frame(Rtsne::Rtsne(X = as.matrix(rbind(data$pca$cells,x)),dims = 2, pca = F,verbose = verbose,max_iter=1000,num_threads=nt, ...)$Y)
-    rownames(df) = c(rownames(data$pca$cells),rownames(x))
-    colnames(df) = c("X","Y")
-    data$embedded[1:nrow(data$pca$cells),c("X","Y")] = df[1:nrow(data$pca$cells),c("X","Y")]
-    df = df[rownames(x),]
-  }
-  
-  if(is.null(data$embedded$predicted)) {data$embedded$predicted = "NO"}
-  
-  if (ncol(data$embedded)>2) {
-    df[,colnames(data$embedded)[3:ncol(data$embedded)]] = NA
-    df$predicted = "YES"
-  } else {
-    df$predicted = "YES"
-  }
-  data$embedded = rbind(data$embedded,df)
-  data$pca$pred = x
-  data$embedded$predicted = factor(as.character(data$embedded$predicted),levels = c("NO","YES"))
+  data$pca$pred = x;rm(x);gc()
   return(data)
 }
 
