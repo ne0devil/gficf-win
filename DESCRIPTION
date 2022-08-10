@@ -33,7 +33,7 @@ Imports:
     locfit,
     reticulate,
     leiden,
-    class,
+    KernelKnn,
     tradeSeq,
     slingshot,
     gptk,

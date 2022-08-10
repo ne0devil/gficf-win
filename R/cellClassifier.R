@@ -7,25 +7,27 @@
 #' @param classes chareachters; Classes of already existing cells in the order of they are in colnames(data$gficf).
 #' @param k integer; Number of K-nn to use for classification. Odd number less than 30 are preferred.
 #' @param seed integer; Initial seed to use.
-#' @param method chareachters; Which space in which apply KNN (subspace or embedded). Default is embedded (i.e., umap/tsne space) because usually gives better results then the subspace PCA/NMF.
+#' @param knn_method string; a string specifying the method. Valid methods are 'euclidean', 'manhattan', 'chebyshev', 'canberra', 'braycurtis', 'pearson_correlation', 'simple_matching_coefficient', 'minkowski' (by default the order 'p' of the minkowski parameter equals k), 'hamming', 'mahalanobis', 'jaccard_coefficient', 'Rao_coefficient'.
+#' @param knn_method ; there are various ways of specifying the kernel function. NULL value (default) correspond to unweighted KNN algorithm. See the details section of KernelKnn package for more values.
+#' @param nt numeric; Number of thread to use (default is 0, i.e. all possible CPUs - 1)
 #' @return A dataframe containing cell id and predicted classes.
-#' @importFrom class knn
+#' @importFrom KernelKnn KernelKnn
 #' 
 #' @export
-classify.cells = function(data,classes,k=7,seed=18051982,method="embedded")
+classify.cells = function(data,classes,k=7,seed=18051982,knn_method="euclidean",knn_weights_fun=NULL,nt=0)
 {
-  method = base::match.arg(arg = method,choices = c("subspace","embedded"),several.ok = F)
   if (is.null(data$embedded.predicted)) {stop("Please embed first new cells!")}
+  if (nt==0) {nt = ifelse(detectCores()>1,detectCores()-1,1)}
   set.seed(seed)
   if(!is.factor(classes)) {classes = factor(as.character(classes))}
-  if (method%in%"subspace")
-  {
-    res = class::knn(data$pca$cells,data$pca$pred,classes,k = k,prob = T) 
-  } else {
-    res = class::knn(data$embedded[,c(1,2)],data$embedded.predicted[,c(1,2)],classes,k = k,prob = T)
-  }
-  data$embedded.predicted$predicted.class <- as.character(res)
-  data$embedded.predicted$class.prob <- attr(res,"prob")
+  
+  res = KernelKnn(data = data$embedded[,c(1,2)], TEST_data = data$embedded.predicted[,c(1,2)], y = as.numeric(classes), k = k ,h = 1,method = knn_method, knn_weights_fun, threads = nt, regression = F,Levels = 1:length(levels(classes)))
+  colnames(res) = levels(classes)
+  res <- apply(res, 1, function(x) {i = which.max(x); return(data.frame(predicted.class=names(x)[i],class.prob=x[i],stringsAsFactors = F))} )
+  res <- do.call("rbind",res)
+  rownames(res) <- NULL
+  #res = class::knn(data$embedded[,c(1,2)],data$embedded.predicted[,c(1,2)],classes,k = k,prob = T)
+  data$embedded.predicted <- cbind(data$embedded.predicted,res)
   return(data)
 }
 

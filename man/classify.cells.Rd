@@ -4,7 +4,15 @@
 \alias{classify.cells}
 \title{Classify New Embedded Cells}
 \usage{
-classify.cells(data, classes, k = 7, seed = 18051982, method = "embedded")
+classify.cells(
+  data,
+  classes,
+  k = 7,
+  seed = 18051982,
+  knn_method = "euclidean",
+  knn_weights_fun = NULL,
+  nt = 0
+)
 }
 \arguments{
 \item{data}{list; GFICF object}
@@ -15,7 +23,9 @@ classify.cells(data, classes, k = 7, seed = 18051982, method = "embedded")
 
 \item{seed}{integer; Initial seed to use.}
 
-\item{method}{chareachters; Which space in which apply KNN (subspace or embedded). Default is embedded (i.e., umap/tsne space) because usually gives better results then the subspace PCA/NMF.}
+\item{knn_method}{; there are various ways of specifying the kernel function. NULL value (default) correspond to unweighted KNN algorithm. See the details section of KernelKnn package for more values.}
+
+\item{nt}{numeric; Number of thread to use (default is 0, i.e. all possible CPUs - 1)}
 }
 \value{
 A dataframe containing cell id and predicted classes.
