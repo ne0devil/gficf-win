@@ -52,6 +52,7 @@ classify.cells = function(data,classes,k=7,seed=18051982,knn_method="euclidean",
 embedNewCells = function(data,x,nt=2,seed=18051982, verbose=TRUE, ...)
 {
   if(data$reduction=="tsne") {stop("Not supported with t-SNE reduction!!")}
+  if(length(intersect(rownames(data$gficf),rownames(x)))==0) {stop("No common genes between the two dataset! Please check if gene identifiers beween two dataset correspond")}
   
   tsmessage("Gene filtering..",verbose = verbose)
   g = union(rownames(filter_genes_cell2loc_style(data = x,data$param$cell_count_cutoff,data$param$cell_percentage_cutoff2,data$param$nonz_mean_cutoff)),rownames(data$gficf))
