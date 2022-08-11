@@ -63,14 +63,13 @@ ensToSymbol = function(df,col,organism,verbose=T)
   tsmessage("... Retrieving gene annotation from AnnotationHub()",verbose = verbose)
   ah <- AnnotationHub::AnnotationHub()
   ahDb <- AnnotationHub::query(ah,pattern = c(org.map[organism],"EnsDb"), ignore.case = TRUE)
-  id <- tail(rownames(mcols(ahDb)),n=1)
+  id <- tail(rownames(AnnotationHub::mcols(ahDb)),n=1)
   edb <- ah[[id]]
   ens.map <- subset(genes(edb,return.type = "data.frame"),seq_name%in%c(as.character(1:22),"X","Y","MT") & !gene_biotype%in%"LRG_gene")
   
   if(organism %in% "human")
   {
-    tsmessage(".. Start converting human symbols to human ensamble id",verbose = verbose)
-    g = unique(as.character(df[,col]))
+    tsmessage(".. Start converting human ensamble id to symbols",verbose = verbose)
     df$symb = NA
     df$symb = ens.map$gene_name[fastmatch::fmatch(df[,col],ens.map$gene_id)]
     tsmessage("Done!",verbose = verbose)
@@ -78,8 +77,7 @@ ensToSymbol = function(df,col,organism,verbose=T)
   
   if (organism %in% "mouse")
   {
-    tsmessage(".. Start converting human symbols to mouse ensamble id",verbose = verbose)
-    g = unique(as.character(df[,col]))
+    tsmessage(".. Start converting mouse ensamble id to symbols",verbose = verbose)
     df$symb = NA
     df$symb = ens.map$gene_name[fastmatch::fmatch(df[,col],ens.map$gene_id)]
     tsmessage("Done!",verbose = verbose)
@@ -87,6 +85,55 @@ ensToSymbol = function(df,col,organism,verbose=T)
   
   return(df)
 }
+
+#' Convert Official Gene Symbols to Ensamble IDs 
+#'
+#' It uses biomart. If more the one gene is associated to the enamble, the first one retrived from
+#' Biomart is used.
+#' 
+#' @param df data frame; Data frame containing the IDs to convert.
+#' @param col characters; Name of column containing the gene symbol.
+#' @param organism characters; Organism of origin (i.e. human or mouse).
+#' @param verbose boolean; Icrease verbosity.
+#' @return The updated data frame with a new column called ens.
+#'
+#' @import AnnotationHub
+#' @import fastmatch
+#' 
+#' @export
+symbolToEns = function(df,col,organism,verbose=T)
+{
+  organism = tolower(organism)
+  organism = base::match.arg(arg = organism,choices = c("human","mouse"),several.ok = F)
+  org.map = c("Homo Sapiens","Mus Musculus")
+  names(org.map) = c("human","mouse")
+  
+  tsmessage("... Retrieving gene annotation from AnnotationHub()",verbose = verbose)
+  ah <- AnnotationHub::AnnotationHub()
+  ahDb <- AnnotationHub::query(ah,pattern = c(org.map[organism],"EnsDb"), ignore.case = TRUE)
+  id <- tail(rownames(AnnotationHub::mcols(ahDb)),n=1)
+  edb <- ah[[id]]
+  ens.map <- subset(genes(edb,return.type = "data.frame"),seq_name%in%c(as.character(1:22),"X","Y","MT") & !gene_biotype%in%"LRG_gene")
+  
+  if(organism %in% "human")
+  {
+    tsmessage(".. Start converting human symbols to human ensamble id",verbose = verbose)
+    df$ens = NA
+    df$ens = ens.map$gene_id[fastmatch::fmatch(df[,col],ens.map$symbol)]
+    tsmessage("Done!",verbose = verbose)
+  }
+  
+  if (organism %in% "mouse")
+  {
+    tsmessage(".. Start converting human symbols to mouse ensamble id",verbose = verbose)
+    df$ens = NA
+    df$ens = ens.map$gene_id[fastmatch::fmatch(df[,col],ens.map$symbol)]
+    tsmessage("Done!",verbose = verbose)
+  }
+  
+  return(df)
+}
+
 
 # Rcpp progress bar style
 progress_for <- function(n, tot,display) {
