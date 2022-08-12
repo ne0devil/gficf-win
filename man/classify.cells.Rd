@@ -23,7 +23,9 @@ classify.cells(
 
 \item{seed}{integer; Initial seed to use.}
 
-\item{knn_method}{; there are various ways of specifying the kernel function. NULL value (default) correspond to unweighted KNN algorithm. See the details section of KernelKnn package for more values.}
+\item{knn_method}{string; a string specifying the method. Valid methods are 'euclidean', 'manhattan', 'chebyshev', 'canberra', 'braycurtis', 'pearson_correlation', 'simple_matching_coefficient', 'minkowski' (by default the order 'p' of the minkowski parameter equals k), 'hamming', 'mahalanobis', 'jaccard_coefficient', 'Rao_coefficient'.}
+
+\item{knn_weights_fun}{value; there are various ways of specifying the kernel function. NULL value (default) correspond to unweighted KNN algorithm. See the details section of KernelKnn package for more values.}
 
 \item{nt}{numeric; Number of thread to use (default is 0, i.e. all possible CPUs - 1)}
 }

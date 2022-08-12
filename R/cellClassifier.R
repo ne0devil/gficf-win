@@ -8,7 +8,7 @@
 #' @param k integer; Number of K-nn to use for classification. Odd number less than 30 are preferred.
 #' @param seed integer; Initial seed to use.
 #' @param knn_method string; a string specifying the method. Valid methods are 'euclidean', 'manhattan', 'chebyshev', 'canberra', 'braycurtis', 'pearson_correlation', 'simple_matching_coefficient', 'minkowski' (by default the order 'p' of the minkowski parameter equals k), 'hamming', 'mahalanobis', 'jaccard_coefficient', 'Rao_coefficient'.
-#' @param knn_method ; there are various ways of specifying the kernel function. NULL value (default) correspond to unweighted KNN algorithm. See the details section of KernelKnn package for more values.
+#' @param knn_weights_fun value; there are various ways of specifying the kernel function. NULL value (default) correspond to unweighted KNN algorithm. See the details section of KernelKnn package for more values.
 #' @param nt numeric; Number of thread to use (default is 0, i.e. all possible CPUs - 1)
 #' @return A dataframe containing cell id and predicted classes.
 #' @importFrom KernelKnn KernelKnn
@@ -27,7 +27,8 @@ classify.cells = function(data,classes,k=7,seed=18051982,knn_method="euclidean",
   res <- do.call("rbind",res)
   rownames(res) <- NULL
   #res = class::knn(data$embedded[,c(1,2)],data$embedded.predicted[,c(1,2)],classes,k = k,prob = T)
-  data$embedded.predicted <- cbind(data$embedded.predicted,res)
+  data$embedded.predicted$predicted.class <- res$predicted.class
+  data$embedded.predicted$class.prob <- res$class.prob
   return(data)
 }
 
@@ -39,7 +40,7 @@ classify.cells = function(data,classes,k=7,seed=18051982,knn_method="euclidean",
 #' @param x Matrix; UMI counts matrix of cells to embedd.
 #' @param nt integer; Number of thread to use (default 2).
 #' @param seed integer; Initial seed to use.
-#' @param ... Additional arguments to pass to Rtsne or umap_transform call.
+#' @param normalize boolean; If counts must be normalized before to be rescaled with GFICF.
 #' @param verbose boolean; Icrease verbosity.
 #' @return The updated gficf object.
 #' @import Matrix
@@ -49,7 +50,7 @@ classify.cells = function(data,classes,k=7,seed=18051982,knn_method="euclidean",
 #' @importFrom RcppML predict.nmf
 #' 
 #' @export
-embedNewCells = function(data,x,nt=2,seed=18051982, verbose=TRUE, ...)
+embedNewCells = function(data,x,nt=2,seed=18051982, normalize=TRUE,verbose=TRUE)
 {
   if(data$reduction=="tsne") {stop("Not supported with t-SNE reduction!!")}
   if(length(intersect(rownames(data$gficf),rownames(x)))==0) {stop("No common genes between the two dataset! Please check if gene identifiers beween two dataset correspond")}
@@ -59,8 +60,8 @@ embedNewCells = function(data,x,nt=2,seed=18051982, verbose=TRUE, ...)
   x = x[rownames(x)%in%g,]
   rm(g)
   
-  tsmessage("Normalize counts..",verbose = verbose)
-  if (data$param$normalized){
+  if (normalize){
+    tsmessage("Normalize counts..",verbose = verbose)
     x <- Matrix::Matrix(edgeR::cpm(edgeR::calcNormFactors(edgeR::DGEList(counts=x),normalized.lib.sizes = T)),sparse = T)
   }
   
