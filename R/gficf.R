@@ -193,9 +193,7 @@ saveGFICF <- function(data, file, verbose = TRUE)
         uwot_dir <- file.path(gficf_dir, "uwot")
         dir.create(uwot_dir,recursive = T)
         uwot_tmpfname <- file.path(uwot_dir,"uwot_obj")
-        uwot::save_uwot(model = data$uwot,file = uwot_tmpfname,verbose = verbose)
-        uwot::unload_uwot(data$uwot)
-        data$uwot <-uwot::load_uwot(file = uwot_tmpfname, verbose = verbose)
+        data$uwot <- uwot::save_uwot(model = data$uwot,file = uwot_tmpfname,verbose = verbose)
       }
     }
     
@@ -206,12 +204,16 @@ saveGFICF <- function(data, file, verbose = TRUE)
     # archive the files under the temp dir into the single target file
     # change directory so the archive only contains one directory
     setwd(mod_dir)
+    if(file.exists(file)) {file.rename(file,paste0(file,".bak"))}
     utils::tar(tarfile = file, files = "gficf/")
   },
   finally = {
     setwd(wd)
     if (file.exists(mod_dir)) {
       unlink(mod_dir, recursive = TRUE)
+    }
+    if(file.exists(paste0(file,".bak"))) {
+      file.remove(paste0(file,".bak"))
     }
   })
 }
