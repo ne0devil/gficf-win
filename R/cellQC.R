@@ -4,20 +4,28 @@
 #' Loess and GAM regression are used to fit relationships between the number of UMI and either the ratio of detected genes or the MT ratio.
 #' 
 #' @param counts Matrix; Raw counts matrix
-#' @param organism chareachters; Organism (supported Homo Sapiens and Mus musculus).
+#' @param organism characters; Organism (supported Homo Sapiens and Mus musculus).
 #' @param plot boolean; If regression plots must be showed.
-#' @param verbose boolean; Icrease verbosity.
+#' @param verbose boolean; Increase verbosity.
+#' @param minUMI numeric; Minimium number of UMI per cell (default 800).
 #' @return The updated gficf object.
 #' @import AnnotationHub
 #' @import ensembldb
 #' 
 #' @export
-filterCells = function(counts,organism="Homo sapiens",plot=F,verbose=T) {
+filterCells = function(counts,organism="Homo sapiens",plot=F,verbose=T,minUMI=800) {
   organism = base::match.arg(arg = organism,choices = c("Homo sapiens","Mus musculus"),several.ok = F)
   
   metadata = data.frame(cell.id = colnames(counts),nUMI=armaColSum(counts),nGenes=armaColSum(counts!=0),stringsAsFactors = F)
   rownames(metadata) = metadata$cell.id
   metadata$geneRatio = metadata$nGenes/metadata$nUMI
+  
+  tsmessage("... Filtering Cells by minUMI",verbose = verbose)
+  b = nrow(metadata)
+  metadata <- subset(metadata,nUMI>=minUMI)
+  counts <- counts[,colnames(counts)%in%metadata$cell.id]
+  a = nrow(metadata)
+  tsmessage(paste0("Cells passing the coverage filter ",a," out of ",b," (",round(a/b*100,2),")"),verbose = verbose)
   
   tsmessage("... Retrieving gene annotation",verbose = verbose)
   ah <- AnnotationHub()

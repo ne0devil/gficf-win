@@ -4,16 +4,24 @@
 \alias{filterCells}
 \title{Cell QC}
 \usage{
-filterCells(counts, organism = "Homo sapiens", plot = F, verbose = T)
+filterCells(
+  counts,
+  organism = "Homo sapiens",
+  plot = F,
+  verbose = T,
+  minUMI = 800
+)
 }
 \arguments{
 \item{counts}{Matrix; Raw counts matrix}
 
-\item{organism}{chareachters; Organism (supported Homo Sapiens and Mus musculus).}
+\item{organism}{characters; Organism (supported Homo Sapiens and Mus musculus).}
 
 \item{plot}{boolean; If regression plots must be showed.}
 
-\item{verbose}{boolean; Icrease verbosity.}
+\item{verbose}{boolean; Increase verbosity.}
+
+\item{minUMI}{numeric; Minimium number of UMI per cell (default 800).}
 }
 \value{
 The updated gficf object.
