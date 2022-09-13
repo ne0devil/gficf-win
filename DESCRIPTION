@@ -38,7 +38,8 @@ Imports:
     limma,
     pointr,
     AnnotationHub,
-    ensembldb
+    ensembldb,
+    harmony
 Remotes:
     github::zdebruine/RcppML
 SystemRequirements: GNU make
