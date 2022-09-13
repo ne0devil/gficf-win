@@ -47,7 +47,7 @@ classify.cells = function(data,classes,k=7,seed=18051982,knn_method="euclidean",
 #' @import uwot
 #' @importFrom edgeR DGEList calcNormFactors cpm
 #' @importFrom Rtsne Rtsne
-#' @importFrom RcppML predict.nmf
+#' @import RcppML
 #' 
 #' @export
 embedNewCells = function(data,x,nt=2,seed=18051982, normalize=TRUE,verbose=TRUE)

@@ -13,7 +13,7 @@
 #' @param nt numeric; Numbmber of thread to use (default is 0, i.e. all available CPU cores).
 #' @param ... Additional arguments to pass to nfm call (see ?RcppML::nmf).
 #' @return The updated gficf object.
-#' @importFrom RcppML nmf
+#' @import RcppML
 #' @import Matrix
 #' 
 #' @export
