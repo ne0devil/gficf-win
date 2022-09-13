@@ -9,7 +9,7 @@ BugReports: https://github.com/gambalab/gficf
 Encoding: UTF-8
 LazyData: true
 RoxygenNote: 7.2.1
-Depends: R (>= 3.6), Matrix, RcppML
+Depends: R (>= 3.6), RcppML
 LinkingTo: RcppArmadillo, Rcpp (>= 0.11.0), RcppGSL, RcppProgress, RcppParallel, RcppEigen
 biocViews:
 Imports: 
