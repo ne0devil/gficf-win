@@ -36,7 +36,6 @@ Imports:
     mgcv,
     GSVA,
     limma,
-    RcppML,
     pointr,
     AnnotationHub,
     ensembldb
