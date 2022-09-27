@@ -160,6 +160,7 @@ runGSEA <- function(data,gmt.file,nsim=1000,convertToEns=T,convertHu2Mm=F,nt=2,m
 #' @param seed integer; Seed to use for random number generation.
 #' @param nmf.k numeric; Rank of NMF.
 #' @param fdr.th numeric; FDR threshold for GSEA.
+#' @param rescale string; If different by none, pathway's activity scores are resealed as Z-score. Possible values are none, byGS or byCell. Default is none.
 #' @return The updated gficf object.
 #' @importFrom fgsea fgsea
 #' @import fastmatch
@@ -167,8 +168,9 @@ runGSEA <- function(data,gmt.file,nsim=1000,convertToEns=T,convertHu2Mm=F,nt=2,m
 #' @import utils
 #' @import pointr
 #' @export
-runScGSEA <- function(data,gmt.file,nsim=10000,convertToEns=T,convertHu2Mm=F,nt=2,minSize=15,maxSize=Inf,verbose=TRUE,seed=180582,nmf.k=100,fdr.th=0.05,gp=0)
+runScGSEA <- function(data,gmt.file,nsim=10000,convertToEns=T,convertHu2Mm=F,nt=2,minSize=15,maxSize=Inf,verbose=TRUE,seed=180582,nmf.k=100,fdr.th=0.05,gp=0,rescale="none")
 {
+  rescale = base::match.arg(arg = rescale,choices = c("none","byGS","byCell"),several.ok = F)
   options(RcppML.threads = nt)
   use.for.nmf="gficf"
   set.seed(seed)
@@ -246,6 +248,16 @@ runScGSEA <- function(data,gmt.file,nsim=10000,convertToEns=T,convertHu2Mm=F,nt=
   
   data$scgsea$stat = df[,c("pathway","size")]
   data$scgsea$x = data$scgsea$x[,armaColSum(data$scgsea$x)>0]
+  
+  if(rescale!="none"){
+    if(rescale=="byGS") {
+      data$scgsea$x = t(data$scgsea$x)
+      data$scgsea$x = t( (data$scgsea$x - rowMeans(data$scgsea$x)) / apply(data$scgsea$x, 1, sd))
+    }
+    if(rescale=="byCell") {
+      data$scgsea$x = (data$scgsea$x - rowMeans(data$scgsea$x)) / apply(data$scgsea$x, 1, sd)
+    }
+  }
   
   return(data)
 }

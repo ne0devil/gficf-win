@@ -17,7 +17,8 @@ runScGSEA(
   seed = 180582,
   nmf.k = 100,
   fdr.th = 0.05,
-  gp = 0
+  gp = 0,
+  rescale = "none"
 )
 }
 \arguments{
@@ -44,6 +45,8 @@ runScGSEA(
 \item{nmf.k}{numeric; Rank of NMF.}
 
 \item{fdr.th}{numeric; FDR threshold for GSEA.}
+
+\item{rescale}{string; If different by none, pathway's activity scores are resealed as Z-score. Possible values are none, byGS or byCell. Default is none.}
 }
 \value{
 The updated gficf object.
