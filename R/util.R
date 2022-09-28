@@ -337,7 +337,7 @@ armaColSum <- function(M,nt=0,verbose=FALSE) {
   if(c[1]=="matrix") {
     res = armaColSumFull(M,nt,verbose)
   } else {
-    if (c[1]=="lgCMatrix") {
+    if (c[1]=="lgCMatrix" || c[1]=="lgTMatrix") {
       res = Matrix::colSums(M)
     } else { 
       if(c[1]!="dgCMatrix") {M = as(M,"CsparseMatrix")}
