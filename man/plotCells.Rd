@@ -4,7 +4,7 @@
 \alias{plotCells}
 \title{Plot cells in the ebedded space}
 \usage{
-plotCells(data, colorBy = NULL, pointSize = 0.5)
+plotCells(data, colorBy = NULL, pointSize = 0.5, pointShape = 46)
 }
 \arguments{
 \item{data}{list; GFICF object}
@@ -12,6 +12,8 @@ plotCells(data, colorBy = NULL, pointSize = 0.5)
 \item{colorBy}{characters; Color cells according to a column contained in data$embedded data frame. Default is NULL.}
 
 \item{pointSize}{integer; Size of the points in the plot. Default is 0.5.}
+
+\item{pointShape}{integer; Shape of the points in the plot. Default is 46.}
 }
 \value{
 The updated gficf object.

@@ -1,24 +1,28 @@
-#' Latent Semantic Analysis (LSA) 
+#' Non-Negative Matrix Factorization (NMF) 
 #'
-#' Reduce dimensionality of the single cell dataset using Latent Semantic Analysis (LSA)
+#' Reduce dimensionality of the single cell dataset using Non-Negative Matrix Factorization (NMF)
 #' 
 #' @param data list; GFICF object
 #' @param dim integer; Number of dimension which to reduce the dataset.
-#' @param var.scale logical; Rescale gficf scores for adjusted variance like in pagoda2 (highly experimental!).
 #' @param centre logical; Centre gficf scores before applying reduction (increase separation).
 #' @param randomized logical; Use randomized (faster) version for matrix decomposition (default is TRUE).
 #' @param seed integer; Initial seed to use.
-#' @param use.odgenes boolean; Use significant overdispersed genes respect to ICF values (highly experimental!).
-#' @param n.odgenes integer; Number of overdispersed genes to use (highly experimental!). A good choise seems to be usually between 1000 and 3000.
+#' @param use.odgenes boolean; Use only significant overdispersed genes respect to ICF values.
+#' @param n.odgenes integer; Number of overdispersed genes to use. A good choise seems to be usually between 1000 and 3000.
 #' @param plot.odgenes boolean; Show significant overdispersed genes respect to ICF values.
+#' @param nt numeric; Numbmber of thread to use (default is 0, i.e. all available CPU cores).
+#' @param ... Additional arguments to pass to nfm call (see ?RcppML::nmf).
 #' @return The updated gficf object.
-#' @importFrom RSpectra svds
-#' @importFrom rsvd rsvd
+#' @import RcppML
+#' @import Matrix
 #' 
 #' @export
-runLSA = function(data,dim=NULL,var.scale=F,centre=F,randomized=T,seed=180582,use.odgenes=F,n.odgenes=NULL,plot.odgenes=F)
+runNMF = function(data,dim=NULL,seed=180582,use.odgenes=F,n.odgenes=NULL,plot.odgenes=F, nt=0, ...)
 {
   if(use.odgenes & is.null(data$rawCounts)) {stop("Raw Counts absent! Please run gficf normalization with storeRaw = T")}
+  
+  if (nt==0) {nt = ifelse(detectCores()>1,detectCores()-1,1)}
+  options(RcppML.threads = nt)
   
   if (is.null(dim))
   {
@@ -30,9 +34,7 @@ runLSA = function(data,dim=NULL,var.scale=F,centre=F,randomized=T,seed=180582,us
   set.seed(seed)
   
   data$pca = list()
-  data$pca$cells = t(data$gficf)
-  #data$pca$cells = scaleMatrix(data$pca$cells,rescale,centre)
-  
+
   if(use.odgenes) {
     overD=suppressWarnings(findOverDispersed(data = data,alpha = 0.1,verbose = F,plot = plot.odgenes))
     odgenes <- rownames(overD[overD$lpa<log(0.1),])
@@ -43,22 +45,26 @@ runLSA = function(data,dim=NULL,var.scale=F,centre=F,randomized=T,seed=180582,us
         odgenes <- odgenes[1:n.odgenes]
       }
     }
-    data$pca$cells = data$pca$cells[,odgenes]
+    data$pca$cells = t(data$gficf)[,odgenes]
     data$pca$odgenes = overD
     tsmessage("... using ",length(odgenes)," OD genes",verbose = T)
   } 
   
-  if(var.scale) {
-    if(!use.odgenes) {overD=suppressWarnings(findOverDispersed(data = data,alpha = 0.1,verbose = F))}
-    data$pca$cells@x <- data$pca$cells@x*rep(overD[colnames(data$pca$cells),'gsf'],diff(data$pca$cells@p))
-    data$pca$odgenes = overD
+  if (is.null(data$pca$cells)){
+    tsmessage("Performing NFM..")
+    nfm = RcppML::nmf(data$gficf,k = dim, ...)
+  } else {
+    nfm = RcppML::nmf(t(data$pca$cells),k = dim, ...)
   }
   
-  if (randomized) {ppk<- rsvd::rsvd(data$pca$cells,k=dim)} else {ppk<- RSpectra::svds(data$pca$cells,k=dim)}
-  data$pca$cells <- ppk$u %*% base::diag(x = ppk$d)
-  data$pca$centre <- F
-  data$pca$rescale <- var.scale
-  data$pca$genes <- ppk$v
+  data$pca$cells <- t(nfm$h)
+  data$pca$genes <- nfm$w
+  rm(nfm);gc()
+  data$pca$centre <- F # for legacy
+  data$pca$rescale <- F # for legacy
+  data$pca$type = "NMF"
+  data$pca$use.odgenes = use.odgenes
+  
   if(use.odgenes) {rownames(data$pca$genes)=odgenes} else {rownames(data$pca$genes) = rownames(data$gficf)}
   rownames(data$pca$cells) = colnames(data$gficf)
   return(data)
@@ -70,19 +76,17 @@ runLSA = function(data,dim=NULL,var.scale=F,centre=F,randomized=T,seed=180582,us
 #' 
 #' @param data list; GFICF object
 #' @param dim integer; Number of dimension which to reduce the dataset.
-#' @param var.scale logical; Rescale gficf scores for adjusted variance like in pagoda2 (highly experimental!).
 #' @param centre logical; Centre gficf scores before applying reduction (increase separation).
-#' @param randomized logical; Use randomized (faster) version for matrix decomposition (default is TRUE).
 #' @param seed integer; Initial seed to use.
-#' @param use.odgenes boolean; Use significant overdispersed genes respect to ICF values (highly experimental!).
-#' @param n.odgenes integer; Number of overdispersed genes to use (highly experimental!). A good choise seems to be usually between 1000 and 3000.
+#' @param use.odgenes boolean; Use only significant overdispersed genes respect to ICF values.
+#' @param n.odgenes integer; Number of overdispersed genes to use. A good choise seems to be usually between 1000 and 3000.
 #' @param plot.odgenes boolean; Show significant overdispersed genes respect to ICF values.
 #' @return The updated gficf object. 
 #' @return The updated gficf object.
-#' @importFrom rsvd rpca
+#' @importFrom irlba irlba
 #' 
 #' @export
-runPCA = function(data,dim=NULL,var.scale=F,centre=F,randomized=T,seed=180582,use.odgenes=F,n.odgenes=NULL,plot.odgenes=F)
+runPCA = function(data,dim=NULL,var.scale=F,centre=F,seed=180582,use.odgenes=F,n.odgenes=NULL,plot.odgenes=F)
 {
   
   if(use.odgenes & is.null(data$rawCounts)) {stop("Raw Counts absent! Please run gficf normalization with storeRaw = T")}
@@ -98,8 +102,7 @@ runPCA = function(data,dim=NULL,var.scale=F,centre=F,randomized=T,seed=180582,us
   
   data$pca = list()
   data$pca$cells = t(data$gficf)
-  #data$pca$cells = scaleMatrix(data$pca$cells,F,F)
-  
+
   if(use.odgenes) {
     overD=suppressWarnings(findOverDispersed(data = data,alpha = 0.1,verbose = F,plot = plot.odgenes))
     odgenes <- rownames(overD[overD$lpa<log(0.1),])
@@ -115,17 +118,21 @@ runPCA = function(data,dim=NULL,var.scale=F,centre=F,randomized=T,seed=180582,us
     tsmessage("... using ",length(odgenes)," OD genes",verbose = T)
   }
   
-  if(var.scale) {
-    if(!use.odgenes) {overD=suppressWarnings(findOverDispersed(data = data,alpha = 0.1,verbose = F))}
-    data$pca$cells@x <- data$pca$cells@x*rep(overD[colnames(data$pca$cells),'gsf'],diff(data$pca$cells@p))
-    data$pca$odgenes = overD
+  #x = rsvd::rpca(data$pca$cells,k=dim,center=centre,scale=F,rand=randomized)
+  if (centre) {
+    x <- irlba::irlba(A = data$pca$cells,nv=dim,center = Matrix::rowMeans(t(data$pca$cells)))
+  } else {
+    x <- irlba::irlba(A = data$pca$cells,nv=dim)
   }
   
-  x = rsvd::rpca(data$pca$cells,k=dim,center=centre,scale=F,rand=randomized)
+  x$x <- x$u %*% diag(x$d)
   data$pca$cells = x$x
   data$pca$centre <- centre
-  data$pca$rescale <- var.scale
-  data$pca$genes <- x$rotation
+  data$pca$rescale <- F
+  data$pca$genes <- x$v
+  data$pca$use.odgenes = use.odgenes
+  rm(x); gc()
+  data$pca$type = "PCA"
   if(use.odgenes) {rownames(data$pca$genes)=odgenes} else {rownames(data$pca$genes) = rownames(data$gficf)}
   rownames(data$pca$cells) = colnames(data$gficf)
   colnames(data$pca$cells) = colnames(data$pca$genes) = paste("C",1:dim,sep = "")
@@ -134,7 +141,7 @@ runPCA = function(data,dim=NULL,var.scale=F,centre=F,randomized=T,seed=180582,us
   
 #' Dimensionality reduction
 #'
-#' Run t-SNE or UMAP or t-UMAP dimensionality reduction on selected features from PCA or LSA.
+#' Run t-SNE or UMAP or t-UMAP dimensionality reduction on selected features from PCA or NMF.
 #' See ?umap or ?Rtsne for additional parameter to use. 
 #' 
 #' @param data list; GFICF object
@@ -146,7 +153,6 @@ runPCA = function(data,dim=NULL,var.scale=F,centre=F,randomized=T,seed=180582,us
 #' }
 #' @param nt integer; Number of thread to use (default 2).
 #' @param seed integer; Initial seed to use.
-#' @param ret_model_pred boolean; If true, the umap model is retained to be used for prediction.
 #' @param verbose boolean; Icrease verbosity. 
 #' @param ... Additional arguments to pass to Rtsne/umap/tumap call.
 #' @return The updated gficf object.
@@ -154,7 +160,7 @@ runPCA = function(data,dim=NULL,var.scale=F,centre=F,randomized=T,seed=180582,us
 #' @importFrom Rtsne Rtsne
 #' 
 #' @export
-runReduction = function(data,reduction="tumap",nt=2,seed=18051982, ret_model_pred = T,verbose=T, ...)
+runReduction = function(data,reduction="tumap",nt=2,seed=18051982, verbose=T, ...)
 {
 
   reduction = base::match.arg(arg = reduction,choices = c("umap","tumap","tsne"),several.ok = F)
@@ -163,21 +169,33 @@ runReduction = function(data,reduction="tumap",nt=2,seed=18051982, ret_model_pre
   if (!is.null(data$pca))
   {
     if(reduction=="tumap"){
-      data$uwot = uwot::tumap(X = data$pca$cells,scale = F,n_threads = nt,verbose = verbose,ret_model = ret_model_pred, ...)
+      if (is.null(data$pca$harmony)){
+        data$uwot = uwot::tumap(X = data$pca$cells,scale = F,n_threads = nt,verbose = verbose,ret_model = T, ...)
+      } else {
+        data$uwot = uwot::tumap(X = t(data$pca$harmony$Z_corr),scale = F,n_threads = nt,verbose = verbose,ret_model = T, ...)
+      }
       data$embedded = base::as.data.frame(data$uwot$embedding)
     }
     
     if(reduction=="umap"){
-      data$uwot = uwot::umap(X = data$pca$cells, scale = F,n_threads = nt,verbose = verbose, ret_model = ret_model_pred, ...)
+      if (is.null(data$pca$harmony)){
+        data$uwot = uwot::umap(X = data$pca$cells, scale = F,n_threads = nt,verbose = verbose, ret_model = T, ...)
+      } else {
+        data$uwot = uwot::umap(X = t(data$pca$harmony$Z_corr), scale = F,n_threads = nt,verbose = verbose, ret_model = T, ...)
+      }
       data$embedded = base::as.data.frame(data$uwot$embedding)
     }
     
     if(reduction=="tsne"){
       data$uwot = NULL
-      data$embedded = base::as.data.frame(Rtsne::Rtsne(X = data$pca$cells,dims = 2, pca = F,verbose = verbose,max_iter=1000,num_threads=nt, ...)$Y)
+      if (is.null(data$pca$harmony)){
+        data$embedded = base::as.data.frame(Rtsne::Rtsne(X = data$pca$cells,dims = 2, pca = F,verbose = verbose,max_iter=1000,num_threads=nt, ...)$Y)
+      } else {
+        data$embedded = base::as.data.frame(Rtsne::Rtsne(X = t(data$pca$harmony$Z_corr),dims = 2, pca = F,verbose = verbose,max_iter=1000,num_threads=nt, ...)$Y)
+      }
     }
   } else {
-    message("Wrning: Reduction is applied directly on GF-ICF values.. can be slow if the dataset is big!")
+    message("Warning: Reduction is applied directly on GF-ICF values.. can be slow if the dataset is big!")
     
     if(reduction=="tumap"){data$embedded = base::as.data.frame(uwot::tumap(X = as.matrix(t(data$gficf)),scale = F,n_threads = nt,verbose = verbose, ...))}
     
@@ -196,24 +214,24 @@ runReduction = function(data,reduction="tumap",nt=2,seed=18051982, ret_model_pre
 #' Compute the number of dimension to use for either PCA or LSA.
 #' 
 #' @param data list; GFICF object
-#' @param randomized logical; Use randomized (faster) version for matrix decomposition (default is TRUE).
+#' @param seed numeric; seed to use.
 #' @param subsampling logical; Use only a subset of the data for the imputation of dimensions to use.
 #' @param plot logical; Show eblow plot.
 #' @importFrom RSpectra svds
-#' @importFrom rsvd rsvd
 #' 
 #' @export
-computePCADim = function(data,randomized=T,subsampling=F,plot=T)
+computePCADim = function(data,seed=180582,subsampling=F,plot=T)
 {
+  set.seed(seed)
   dim = min(50,ncol(data$gficf))
   
   if (subsampling)
   {
     x = data$gficf[,sample(x = 1:ncol(data$gficf),size = round(ncol(data$gficf)/100*5))]
-    if (randomized) {ppk<- rsvd::rsvd(t(x),k=dim)} else {ppk<- RSpectra::svds(t(x),k=dim)}
+    ppk<- RSpectra::svds(t(x),k=dim)
     rm(x)
   } else {
-    if (randomized) {ppk<- rsvd::rsvd(t(data$gficf),k=dim)} else {ppk<- RSpectra::svds(t(data$gficf),k=dim)}
+    ppk<- RSpectra::svds(t(data$gficf),k=dim)
   }
   
   explained.var = ppk$d^2 / sum(ppk$d^2)
@@ -237,9 +255,8 @@ findOverDispersed=function(data,gam.k=5, alpha=5e-2, plot=FALSE, use.unadjusted.
   rowSel <- NULL;
   
   tsmessage("calculating variance fit ...",verbose=verbose)
-  df = data.frame(m=data$w,v=apply(data$rawCounts, 1, var),nobs=Matrix::rowSums(data$rawCounts!=0),stringsAsFactors = F)
+  df = colMeanVarS(t(data$rawCounts),ncores = ifelse(detectCores()>1,detectCores()-1,1))
   df$m = data$w
-  
   
   # gene-relative normalizaton
   df$v <- log(df$v);
@@ -291,7 +308,7 @@ findOverDispersed=function(data,gam.k=5, alpha=5e-2, plot=FALSE, use.unadjusted.
 }
 
 # BH P-value adjustment with a log option
-bh.adjust <- function(x, log = FALSE)
+bh.adjust <- function(x, log = FALSE, verbose = F)
 {
   nai <- which(!is.na(x))
   ox <- x
@@ -305,4 +322,27 @@ bh.adjust <- function(x, log = FALSE)
   a <- rev(cummin(rev(q)))[order(id)]
   ox[nai]<-a
   ox
+}
+
+#' Number of features to use 
+#'
+#' Compute the number of dimension to use for either PCA or LSA.
+#' 
+#' @param data list; GFICF object
+#' @param metadata dataframe; Either (1) Dataframe with variables to integrate or (2) vector with labels.
+#' @param var.to.use character; If meta_data is dataframe, this defined which variable(s) to remove (character vector).
+#' @param verbose boolean; Increase verbosity.
+#' @param ... Additional arguments to pass to HarmonyMatrix function.
+#' @importFrom harmony HarmonyMatrix
+#' 
+#' @export
+runHarmony <- function(data,metadata, var.to.use, verbose = T, ...)
+{
+  tsmessage(".. Running Harmony on PCA/NMF space",verbose=verbose)
+  if (is.null(data$pca)) {stop("Please run fist PCA or NMF reduction!")}
+  data$pca$harmony <- harmony::HarmonyMatrix(data$pca$cells, meta_data = metadata, vars_use = var.to.use,do_pca = F, verbose = F, return_object = T, ...)
+  colnames(data$pca$harmony$Z_corr) <- rownames(data$pca$cells)
+  rownames(data$pca$harmony$Z_corr) <- colnames(data$pca$cells)
+  tsmessage(".. Finished!",verbose=verbose)
+  return(data)
 }

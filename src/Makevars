@@ -4,9 +4,14 @@ CXX_STD = CXX11
 # RcppGSL
 GSL_CFLAGS = $(shell ${R_HOME}/bin/Rscript -e "RcppGSL:::CFlags()")
 GSL_LIBS   = $(shell ${R_HOME}/bin/Rscript -e "RcppGSL:::LdFlags()") `gsl-config --libs`
-PKG_CPPFLAGS += $(GSL_CFLAGS) -I../inst/include
+PKG_CPPFLAGS += $(GSL_CFLAGS) 
 PKG_LIBS += $(GSL_LIBS)
 
 # RcppParallel
-PKG_CXXFLAGS += -DRCPP_PARALLEL_USE_TBB=1 -DSTRICT_R_HEADERS 
+PKG_CXXFLAGS += -DRCPP_PARALLEL_USE_TBB=1 -DSTRICT_R_HEADERS -DRCPP_NO_RTTI
 PKG_LIBS += $(shell ${R_HOME}/bin/Rscript -e "RcppParallel::RcppParallelLibs()")
+
+# OMP
+PKG_CXXFLAGS += -I"./include" $(SHLIB_OPENMP_CXXFLAGS)
+PKG_LIBS += $(SHLIB_OPENMP_CXXFLAGS)
+PKG_CPPFLAGS += -DARMA_64BIT_WORD=1

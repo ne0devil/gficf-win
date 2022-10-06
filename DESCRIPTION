@@ -1,31 +1,30 @@
 Package: gficf
 Title: Gene Frequency - Inverse Cell Frequency
-Version: 0.4.3
+Version: 2.0.0
 Authors@R: person("Gennaro", "Gambardella", email = "gambardella@tigem.it", role = c("aut", "cre"))
 Description: Single cell data rapresentation as text
 License: GPL-3
-URL: https://github.com/dibbelab/gficf
-BugReports: https://github.com/dibbelab/gficf
+URL: https://github.com/gambalab/gficf
+BugReports: https://github.com/gambalab/gficf
 Encoding: UTF-8
 LazyData: true
-RoxygenNote: 7.1.1
-Depends: R (>= 3.6)
-LinkingTo: Rcpp (>= 0.11.0), RcppGSL, RcppProgress, RcppParallel, RcppEigen
+RoxygenNote: 7.2.1
+Depends: R (>= 3.6), RcppML
+LinkingTo: RcppArmadillo, Rcpp (>= 0.11.0), RcppGSL, RcppProgress, RcppParallel, RcppEigen
 biocViews:
 Imports: 
     uwot,
     igraph,
     ggplot2,
-    rsvd,
+    irlba,
     ggrepel,
     Rtsne,
     fastmatch,
     edgeR,
-    BiocParallel,
     fgsea,
     RSpectra,
     Matrix,
-    biomaRt,
+    babelgene,
     reshape2,
     RcppParallel,
     Rcpp,
@@ -33,12 +32,14 @@ Imports:
     locfit,
     reticulate,
     leiden,
-    class,
-    tradeSeq,
-    slingshot,
-    gptk,
+    KernelKnn,
     mgcv,
-    parallel,
     GSVA,
-    limma
+    limma,
+    pointr,
+    AnnotationHub,
+    ensembldb,
+    harmony
+Remotes:
+    github::zdebruine/RcppML
 SystemRequirements: GNU make

@@ -4,7 +4,14 @@
 \alias{embedNewCells}
 \title{Embed new cells in an existing space}
 \usage{
-embedNewCells(data, x, nt = 2, seed = 18051982, verbose = TRUE, ...)
+embedNewCells(
+  data,
+  x,
+  nt = 2,
+  seed = 18051982,
+  normalize = TRUE,
+  verbose = TRUE
+)
 }
 \arguments{
 \item{data}{list; GFICF object}
@@ -15,9 +22,9 @@ embedNewCells(data, x, nt = 2, seed = 18051982, verbose = TRUE, ...)
 
 \item{seed}{integer; Initial seed to use.}
 
-\item{verbose}{boolean; Icrease verbosity.}
+\item{normalize}{boolean; If counts must be normalized before to be rescaled with GFICF.}
 
-\item{...}{Additional arguments to pass to Rtsne or umap_transform call.}
+\item{verbose}{boolean; Icrease verbosity.}
 }
 \value{
 The updated gficf object.

@@ -5,13 +5,14 @@
 #' @param data list; GFICF object
 #' @param colorBy characters; Color cells according to a column contained in data$embedded data frame. Default is NULL.
 #' @param pointSize integer; Size of the points in the plot. Default is 0.5.
+#' @param pointShape integer; Shape of the points in the plot. Default is 46.
 #' @return The updated gficf object.
 #' @export
 #' @import ggrepel
 #' @import ggplot2
 #' 
 #' @export
-plotCells = function(data,colorBy=NULL,pointSize=.5)
+plotCells = function(data,colorBy=NULL,pointSize=.5,pointShape=46)
 {
   if (is.null(colorBy)) {return(ggplot(data = data$embedded) + geom_point(aes(x=X,y=Y),size=pointSize,color="blue") + theme_bw())}
   
@@ -29,7 +30,7 @@ plotCells = function(data,colorBy=NULL,pointSize=.5)
   
   tmp = df[,colorBy]
   
-  ggplot(data = data$embedded) + geom_point(aes(x=X,y=Y,color=tmp),size=pointSize) + theme_bw() + geom_text_repel(data = c,aes(x=xx,y=yy,label=cluster),min.segment.length = 0) + geom_point(data = c,aes(x=xx,y=yy),size=2) + theme(legend.position = "none")
+  ggplot(data = data$embedded) + geom_point(aes(x=X,y=Y,color=tmp),size=pointSize,shape=pointShape) + theme_bw() + geom_text_repel(data = c,aes(x=xx,y=yy,label=cluster),min.segment.length = 0) + geom_point(data = c,aes(x=xx,y=yy),size=2) + theme(legend.position = "none")
 }
 
 #' Plot gene expression across cells
@@ -155,7 +156,7 @@ plotGSEA = function(data,fdr=.05,clusterRowCol=F)
   if (is.null(data$gsea)) {stop("Please run runGSEA function first")}
   nes = data$gsea$nes
   nes[data$gsea$es<=0 | data$gsea$fdr>=fdr] = 0
-  nes = nes[Matrix::rowSums(nes)>0,]
+  nes = nes[armaRowSum(nes)>0,]
   
   if (clusterRowCol)
   {
@@ -194,7 +195,7 @@ plotPathway = function(data,pathwayName,fdr=.05)
   if (is.null(data$gsea)) {stop("Please run runGSEA function first")}
   nes = data$gsea$nes
   nes[data$gsea$es<=0 | data$gsea$fdr>=fdr] = 0 
-  nes = nes[Matrix::rowSums(nes)>0,]
+  nes = nes[armaRowSum(nes)>0,]
   nes = nes[pathwayName,]
   df = data$embedded
   df$NES = nes[match(df$cluster,names(nes))]

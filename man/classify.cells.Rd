@@ -4,18 +4,30 @@
 \alias{classify.cells}
 \title{Classify New Embedded Cells}
 \usage{
-classify.cells(data, classes, k = 7, seed = 18051982, method = "PCA")
+classify.cells(
+  data,
+  classes,
+  k = 7,
+  seed = 18051982,
+  knn_method = "euclidean",
+  knn_weights_fun = NULL,
+  nt = 0
+)
 }
 \arguments{
 \item{data}{list; GFICF object}
 
-\item{classes}{chareachters; Classes of aready exsiting cells in the order of thay are in colnames(data$gficf).}
+\item{classes}{chareachters; Classes of already existing cells in the order of they are in colnames(data$gficf).}
 
-\item{k}{integer; Number of K-nn to use for classification. Odd number less than 30 are prefered.}
+\item{k}{integer; Number of K-nn to use for classification. Odd number less than 30 are preferred.}
 
 \item{seed}{integer; Initial seed to use.}
 
-\item{method}{chareachters; Which space in which apply KNN. Default is PCA but embedded usually gives better results.}
+\item{knn_method}{string; a string specifying the method. Valid methods are 'euclidean', 'manhattan', 'chebyshev', 'canberra', 'braycurtis', 'pearson_correlation', 'simple_matching_coefficient', 'minkowski' (by default the order 'p' of the minkowski parameter equals k), 'hamming', 'mahalanobis', 'jaccard_coefficient', 'Rao_coefficient'.}
+
+\item{knn_weights_fun}{value; there are various ways of specifying the kernel function. NULL value (default) correspond to unweighted KNN algorithm. See the details section of KernelKnn package for more values.}
+
+\item{nt}{numeric; Number of thread to use (default is 0, i.e. all possible CPUs - 1)}
 }
 \value{
 A dataframe containing cell id and predicted classes.
