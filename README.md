@@ -18,13 +18,13 @@ non-negative matrix factorization [RcppML](https://github.com/zdebruine/RcppML) 
 # Installation
 
 
-#### 1. OS required Steps (Officially supported only Ubuntu)
+#### 1. OS required Steps (Officially supported only Linux)
 
 `gficf` makes use of `Rcpp`, `RcppParallel` and `RcppGSL`. So you have to carry out
 a few extra steps before being able to build this package. The steps are reported below for each platform.
 
 
-##### 1.1 Ubuntu
+##### 1.1 Ubuntu/Debian
 
 You need gsl dev library to successfully install RcppGSL library.
 On Ubuntu/Debian systems this can be accomplished by runnuing the command `sudo apt-get install libgsl-dev libcurl4-openssl-dev libssl-dev libxml2-dev` from the terminal.
