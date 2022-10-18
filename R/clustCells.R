@@ -22,9 +22,9 @@
 #' @param  nt integer; Number of cpus to use for k-nn search
 #' @param community.algo characthers; Community algorithm to use for clustering. Supported are:
 #' \itemize{
-#'   \item \code{"louvian"} (the default, the original Louvian method)
-#'   \item \code{"louvian 2"} (Louvian with modularity optimization from Seurat)
-#'   \item \code{"louvian 3"} (Louvain algorithm with multilevel refinement from Seurat)
+#'   \item \code{"louvain"} (the default, the original louvain method)
+#'   \item \code{"louvain 2"} (louvain with modularity optimization from Seurat)
+#'   \item \code{"louvain 3"} (Louvain algorithm with multilevel refinement from Seurat)
 #'   \item \code{"leiden"} (Leiden algorithm see Traag et al. 2019)
 #'   \item \code{"walktrap"}
 #'   \item \code{"fastgreedy"}
@@ -32,9 +32,9 @@
 #' @param store.graph logical; Store produced phenograph in the gficf object
 #' @param seed integer; Seed to use for replication.
 #' @param verbose logical; Increase verbosity.
-#' @param resolution Value of the resolution parameter, use a value above (below) 1.0 if you want to obtain a larger (smaller) number of communities (used only for leiden and louvian 2 or 3 methods).
-#' @param n.start Number of random starts (used only for louvian 2 or 3 methods).
-#' @param n.iter Maximal number of iterations per random start (used only for louvian 2 or 3 methods).
+#' @param resolution Value of the resolution parameter, use a value above (below) 1.0 if you want to obtain a larger (smaller) number of communities (used only for leiden and louvain 2 or 3 methods).
+#' @param n.start Number of random starts (used only for louvain 2 or 3 methods).
+#' @param n.iter Maximal number of iterations per random start (used only for louvain 2 or 3 methods).
 #' @return the updated gficf object
 #' @importFrom  igraph graph.data.frame simplify cluster_louvain walktrap.community fastgreedy.community membership as_adj
 #' @importFrom RcppParallel setThreadOptions RcppParallelLibs
@@ -43,9 +43,9 @@
 #' @import uwot
 #' @import Matrix
 #' @export
-clustcells <- function(data,from.embedded=F,k=15,dist.method="manhattan",nt=2,community.algo="louvian",store.graph=T,seed=180582,verbose=TRUE, resolution = 0.8, n.start = 10, n.iter = 10)
+clustcells <- function(data,from.embedded=F,k=15,dist.method="manhattan",nt=2,community.algo="louvain 3",store.graph=T,seed=180582,verbose=TRUE, resolution = 0.25, n.start = 50, n.iter = 250)
 {
-  community.algo = base::match.arg(arg = community.algo,choices = c("louvian","louvian 2","louvian 3","walktrap","fastgreedy","leiden"),several.ok = F)
+  community.algo = base::match.arg(arg = community.algo,choices = c("louvain","louvain 2","louvain 3","walktrap","fastgreedy","leiden"),several.ok = F)
   
   if (is.null(data$embedded)) {stop("Run first runReduction function")}
   set.seed(seed)
@@ -69,19 +69,19 @@ clustcells <- function(data,from.embedded=F,k=15,dist.method="manhattan",nt=2,co
   g <- igraph::graph.data.frame(relations, directed=FALSE)
   rm(relations,neigh);gc()
   
-  if (community.algo=="louvian")
+  if (community.algo=="louvain")
   {
     tsmessage("Performing louvain...",verbose = verbose)
     community <- igraph::cluster_louvain(g)
   }
   
-  if (community.algo=="louvian 2")
+  if (community.algo=="louvain 2")
   {
     tsmessage("Performing louvain with modularity optimization...",verbose = verbose)
     community <- RunModularityClustering(igraph::as_adjacency_matrix(g,attr = "weight",sparse = T),1,resolution,1,n.start,n.iter,seed,verbose)
   }
   
-  if (community.algo=="louvian 3")
+  if (community.algo=="louvain 3")
   {
     tsmessage("Performing louvain with modularity optimization...",verbose = verbose)
     community <- RunModularityClustering(igraph::as_adjacency_matrix(g,attr = "weight",sparse = T),1,resolution,2,n.start,n.iter,seed,verbose)
@@ -107,8 +107,8 @@ clustcells <- function(data,from.embedded=F,k=15,dist.method="manhattan",nt=2,co
   }
   
   
-  if(community.algo %in% c("louvian 2","louvian 3","leiden")) {
-    if(community.algo %in% c("louvian 2","louvian 3")) {community = community + 1}
+  if(community.algo %in% c("louvain 2","louvain 3","leiden")) {
+    if(community.algo %in% c("louvain 2","louvain 3")) {community = community + 1}
     data$embedded$cluster = as.character(community)
   } else {
     data$embedded$cluster <- as.character(igraph::membership(community))
