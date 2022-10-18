@@ -4,18 +4,12 @@
 \alias{filterCells}
 \title{Cell QC}
 \usage{
-filterCells(
-  counts,
-  organism = "Homo sapiens",
-  plot = F,
-  verbose = T,
-  minUMI = 800
-)
+filterCells(counts, organism, plot = F, verbose = T, minUMI = 800)
 }
 \arguments{
 \item{counts}{Matrix; Raw counts matrix}
 
-\item{organism}{characters; Organism (supported Homo Sapiens and Mus musculus).}
+\item{organism}{characters; Organism (supported human and mouse).}
 
 \item{plot}{boolean; If regression plots must be showed.}
 

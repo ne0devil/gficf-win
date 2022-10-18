@@ -4,7 +4,7 @@
 #' Loess and GAM regression are used to fit relationships between the number of UMI and either the ratio of detected genes or the MT ratio.
 #' 
 #' @param counts Matrix; Raw counts matrix
-#' @param organism characters; Organism (supported Homo Sapiens and Mus musculus).
+#' @param organism characters; Organism (supported human and mouse).
 #' @param plot boolean; If regression plots must be showed.
 #' @param verbose boolean; Increase verbosity.
 #' @param minUMI numeric; Minimium number of UMI per cell (default 800).
@@ -13,7 +13,8 @@
 #' @import ensembldb
 #' 
 #' @export
-filterCells = function(counts,organism="Homo sapiens",plot=F,verbose=T,minUMI=800) {
+filterCells = function(counts,organism,plot=F,verbose=T,minUMI=800) {
+  organism = ifelse(tolower(organism) == "human","Homo sapiens","Mus musculus")
   organism = base::match.arg(arg = organism,choices = c("Homo sapiens","Mus musculus"),several.ok = F)
   
   metadata = data.frame(cell.id = colnames(counts),nUMI=armaColSum(counts),nGenes=armaColSum(counts!=0),stringsAsFactors = F)
@@ -39,10 +40,6 @@ filterCells = function(counts,organism="Homo sapiens",plot=F,verbose=T,minUMI=80
   annotations <- subset(genes(edb,return.type = "data.frame"),seq_name%in%c(as.character(1:22),"X","Y","MT"))
   # Extract IDs for mitochondrial genes
   mt = annotations$gene_id[annotations$seq_name%in%"MT"]
-  # Number of UMIs assigned to mitochondrial genes
-  metadata$mtUMI <- Matrix::colSums(counts[which(rownames(counts) %in% mt),], na.rm = T)
-  # Calculate of mitoRatio per cell
-  metadata$mitoRatio <- metadata$mtUMI/metadata$nUMI
   
   tsmessage("... Filtering Cells by Gene/nUMI ~ log(UMI)",verbose = verbose)
   tmp = plot.UMIxGene(metadata = metadata,method = "less",fdr.th = .1,plot = plot,family = "loess")
@@ -51,12 +48,21 @@ filterCells = function(counts,organism="Homo sapiens",plot=F,verbose=T,minUMI=80
   b = nrow(metadata)
   tsmessage(paste0("Cells passing the coverage filter ",a," out of ",b," (",round(a/b*100,2),")"),verbose = verbose)
   
-  tsmessage("... Filtering Cells by mtRatio ~ log(UMI)")
-  tmp = plot.UMIxMT(metadata,method="greater",plot = plot,family = "loess")
-  metadata$mtFilter = !tmp$toremove
-  a = sum(metadata$mtFilter)
-  tsmessage(paste0("Cells passing the MT filter ",a," out of ",b," (",round(a/b*100,2),")"),verbose = verbose)
-  
+  if (sum(mt %in% rownames(counts))==0) {
+    tsmessage("No mitochondrial genes found! MT filter will be not applied.")
+    metadata$mtFilter = TRUE
+  } else {
+    # Number of UMIs assigned to mitochondrial genes
+    metadata$mtUMI <- Matrix::colSums(counts[which(rownames(counts) %in% mt),], na.rm = T)
+    
+    # Calculate of mitoRatio per cell
+    metadata$mitoRatio <- metadata$mtUMI/metadata$nUMI
+    tsmessage("... Filtering Cells by mtRatio ~ log(UMI)")
+    tmp = plot.UMIxMT(metadata,method="greater",plot = plot,family = "loess")
+    metadata$mtFilter = !tmp$toremove
+    a = sum(metadata$mtFilter)
+    tsmessage(paste0("Cells passing the MT filter ",a," out of ",b," (",round(a/b*100,2),")"),verbose = verbose)
+  }
   data = list()
   data$counts = counts[,metadata$cell.id[metadata$covFilter & metadata$mtFilter]];
   rm(counts);gc()
