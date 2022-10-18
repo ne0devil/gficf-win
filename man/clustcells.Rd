@@ -10,13 +10,13 @@ clustcells(
   k = 15,
   dist.method = "manhattan",
   nt = 2,
-  community.algo = "louvian",
+  community.algo = "louvain 3",
   store.graph = T,
   seed = 180582,
   verbose = TRUE,
-  resolution = 0.8,
-  n.start = 10,
-  n.iter = 10
+  resolution = 0.25,
+  n.start = 50,
+  n.iter = 250
 )
 }
 \arguments{
@@ -38,9 +38,9 @@ clustcells(
 
 \item{community.algo}{characthers; Community algorithm to use for clustering. Supported are:
 \itemize{
-  \item \code{"louvian"} (the default, the original Louvian method)
-  \item \code{"louvian 2"} (Louvian with modularity optimization from Seurat)
-  \item \code{"louvian 3"} (Louvain algorithm with multilevel refinement from Seurat)
+  \item \code{"louvain"} (the default, the original louvain method)
+  \item \code{"louvain 2"} (louvain with modularity optimization from Seurat)
+  \item \code{"louvain 3"} (Louvain algorithm with multilevel refinement from Seurat)
   \item \code{"leiden"} (Leiden algorithm see Traag et al. 2019)
   \item \code{"walktrap"}
   \item \code{"fastgreedy"}
@@ -52,11 +52,11 @@ clustcells(
 
 \item{verbose}{logical; Increase verbosity.}
 
-\item{resolution}{Value of the resolution parameter, use a value above (below) 1.0 if you want to obtain a larger (smaller) number of communities (used only for leiden and louvian 2 or 3 methods).}
+\item{resolution}{Value of the resolution parameter, use a value above (below) 1.0 if you want to obtain a larger (smaller) number of communities (used only for leiden and louvain 2 or 3 methods).}
 
-\item{n.start}{Number of random starts (used only for louvian 2 or 3 methods).}
+\item{n.start}{Number of random starts (used only for louvain 2 or 3 methods).}
 
-\item{n.iter}{Maximal number of iterations per random start (used only for louvian 2 or 3 methods).}
+\item{n.iter}{Maximal number of iterations per random start (used only for louvain 2 or 3 methods).}
 }
 \value{
 the updated gficf object
