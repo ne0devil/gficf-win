@@ -96,9 +96,9 @@ p = ggplot() +
 plot(p)
 ```
 
-# How to classify mapped cells
+# How to contextualize mapped cells
 
-Finally we can use KNN to classy mapped cells and compute the performance of the mapping algorithm in identifying the cell-line of origin of mapped cells. This task can be performed by the function `classify.cells()` of `gficf` package in which the class of reference cells must be specified by the `classes` parameter. Here we use as class of each cell its cell-line of origin. Classification results are stored into `data$embedded.predicted` data.frame where the column `predicted.class` reports the predicted class and the column `class.prob` its predicted probability.   
+Finally we can use KNN to classify and thus contextualize mapped cells into the reference atlas. In this example we try to infer cell-line of origin of each mapped for wich we got a classification accuracy of 93.23%. Specifically, this task can be performed by the function `classify.cells()` of `gficf` package in which the class of reference cells must be specified by the `classes` parameter. Here we use as class of each cell its cell-line of origin. Classification results are stored into `data$embedded.predicted` data.frame where the column `predicted.class` reports the predicted class and the column `class.prob` its predicted probability.   
 
 The `classify.cells()` function is built on top of [`KernelKnn`](https://github.com/mlampros/KernelKnn) package and thus implement several measures to compute the distances among cells that can be specified trough the `knn_method` parameter. At the same time the parameter `knn_weights_fun` can be used to specify the kernel function to use for cell classification. Default is `knn_weights_fun = NULL` that correspond the to [unweighted KNN algorithm](https://en.wikipedia.org/wiki/K-nearest_neighbors_algorithm). For further details on possible kernel functions to use, plese see this [blog-post](http://mlampros.github.io/2016/07/10/KernelKnn/) of original `KernelKnn` package.
 
@@ -107,7 +107,7 @@ The `classify.cells()` function is built on top of [`KernelKnn`](https://github.
 # Step 3. Cell classification with KNN.
 data = classify.cells(data = data,
                       classes = data$embedded$ccl,
-                      k = 10,
+                      k = 11,
                       knn_method = "manhattan",
                       knn_weights_fun = NULL)
 
