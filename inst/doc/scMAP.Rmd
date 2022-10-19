@@ -1,5 +1,5 @@
 ---
-title: "Single-cell Mapper (scMAP)"
+title: "Single-cell Mapper"
 author:
 - name: Gennaro Gambardella
   affiliation: TIGEM (Telethon Institute of Genetics and Medicine) 
@@ -7,7 +7,7 @@ package: gficf
 output:
   BiocStyle::html_document
 vignette: |
-  %\VignetteIndexEntry{Single-cell Mapper (scMAP)}
+  %\VignetteIndexEntry{Single-cell Mapper}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
