@@ -14,7 +14,7 @@ non-negative matrix factorization [RcppML](https://github.com/zdebruine/RcppML) 
 **Examples & Functionality**:  
 * [Getting Started](https://htmlpreview.github.io/?https://github.com/gambalab/gficf/blob/master/inst/doc/index.html)  
 * Single-cell Gene Set Enrichement Analysis (scGSEA) (coming soon..)  
-* Single-cell Mapper (scMAP) (coming soon..)  
+* [Single-cell Mapper (scMAP)](https://htmlpreview.github.io/?https://github.com/gambalab/gficf/blob/master/inst/doc/scMAP.html)  
 
 
 # Installation
