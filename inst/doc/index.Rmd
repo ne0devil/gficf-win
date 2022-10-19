@@ -3,7 +3,6 @@ title: "GFICF Getting Started"
 author:
 - name: Gennaro Gambardella
   affiliation: TIGEM (Telethon Institute of Genetics and Medicine) 
-  email: gambardella@tigem.it
 package: gficf
 output:
   BiocStyle::html_document
