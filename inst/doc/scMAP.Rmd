@@ -1,0 +1,139 @@
+---
+title: "Single-cell Mapper (scMAP)"
+author:
+- name: Gennaro Gambardella
+  affiliation: TIGEM (Telethon Institute of Genetics and Medicine) 
+  email: gambardella@tigem.it
+package: gficf
+output:
+  BiocStyle::html_document
+vignette: |
+  %\VignetteIndexEntry{Single-cell Mapper (scMAP)}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+# Getting started
+
+Single-cell Mapper (scMAP) is a transfer learning algorithm that combines text mining data transformation and a k-nearest neighbours’ (KNN) classifier to map a query set of single-cell transcriptional profiles on top of a reference atlas. scMAP consists of three main steps:  
+
+1. In the first step query cell profiles are normalized with the GF-ICF  method but using the ICF weights learned by using the reference atlas;  
+
+2.  In the second step,  normalized cell profiles are first projected into the NMF (or PC)  sub-space of the reference atlas and then mapped into its UMAP embedding space;  
+
+3. Finally, the KNN algorithm is used to contextualize mapped cells and annotate them.  
+
+Please read the manuscript for additional details and estimated performances of the method.
+
+# Building the reference atlas
+For this tutorial, we will be using as a reference atlas the `small_BC_atlas dataset` included in the `gficf` package (Figure \@ref(fig:atlas)). This dataset is a small version (comprising only 4,760 cells) of the Breast cancer cell-line atlas we recently published ([Gambardella et al.](https://www.nature.com/articles/s41467-022-29358-6)). 
+
+```{r atlas, fig.cap="UMAP of referece BC Atlas. UMAP plot of the small_BC_atlas dataset where cells are color-coded according to their cell-line of origin.",echo=TRUE,cache=TRUE,warning=FALSE,message=F,prompt=T,results='hide'}
+require(gficf)
+require(ggplot2)
+
+# Step 1. Build the reference atlas
+# Load the RAW UMI count matrix on which to build the reference atlas
+data("small_BC_atlas")
+
+# 1.1. Normalization and gene filtering
+data <- gficf( M = small_BC_atlas,
+               cell_count_cutoff = 15,
+               nonz_mean_cutoff = 1.12,
+               cell_percentage_cutoff2 = 0.05,
+               normalize = T,
+               verbose = T)
+
+# 1.2 Create NMF (or PCA) subspace 
+# using all genes (usually improves performances)
+data <- runNMF(data = data,dim = 50)
+
+# 1.3 Create t-UMAP space
+data <-runReduction(data = data,reduction = "umap",nt = 2,verbose = T)
+
+# 1.4 Let's add info about the cell-line of origin
+# Cell meta-data can stored in the data$embedded data.frame
+# Let' add the info about the cell-line, stripping this information
+# from the name of the cell and storing it into ccl column.
+data$embedded$ccl = sapply(
+                            strsplit(x = rownames(data$embedded),
+                                     split = "_",fixed = T)
+                            ,function(x) x[1]
+                          )
+
+# Plot cells by cell line of origin
+p = plotCells(data = data,colorBy = "ccl",pointShape = 19) + 
+    xlab("UMAP 1") + 
+    ylab("UMAP 2")
+
+plot(p)
+```
+
+# How to map new cells into a reference atlas
+
+After we have built our reference atlas (Figure \@ref(fig:atlas)), we use the 930 cells available into the `test_BC_atlas` dataset to test our mapping algorithm (Figure \@ref(fig:map)). Mapping of new cells into the embedded space of the reference atlas is performed by the `scMAP()` function. Metadata and coordinate of new mapped cells are stored into `data$embedded.predicted` data.frame.
+
+```{r map, fig.cap="UMAP of referece BC Atlas and mapped cells. UMAP plot of the small_BC_atlas dataset where cells are color-coded according to their cell-line of origin. Black points are the 930 mapped cells contained in the test_BC_atlas dataset",echo=TRUE,cache=TRUE,warning=FALSE,message=F,prompt=T,results='hide'}
+
+# Step 2. Map new cells into reference atlas.
+# 2.1 Load the new cells to map
+data("test_BC_atlas")
+
+# 2.2 Cell mapping
+data = scMAP(data = data, x = test_BC_atlas,nt = 2,normalize = T,verbose = T)
+
+# 2.3 Plot mapped cells
+p = ggplot() + 
+    geom_point(data = data$embedded,aes(x=X,y=Y,color=ccl),
+               shape=19,size=.5) + 
+    geom_point(data = data$embedded.predicted,aes(x=X,y=Y),
+               color="black",shape=19,size=.2) + 
+    theme_bw() +
+    xlab("UMAP 1") + 
+    ylab("UMAP 2") +
+    theme(legend.position = "none")
+
+plot(p)
+```
+
+# How to classify mapped cells
+
+Finally we can use KNN to classy mapped cells and compute the performance of the mapping algorithm in identifying the cell-line of origin of mapped cells. This task can be performed by the function `classify.cells()` of `gficf` package in which the class of reference cells must be specified by the `classes` parameter. Here we use as class of each cell its cell-line of origin. Classification results are stored into `data$embedded.predicted` data.frame where the column `predicted.class` reports the predicted class and the column `class.prob` its predicted probability.   
+
+The `classify.cells()` function is built on top of [`KernelKnn`](https://github.com/mlampros/KernelKnn) package and thus implement several measures to compute the distances among cells that can be specified trough the `knn_method` parameter. At the same time the parameter `knn_weights_fun` can be used to specify the kernel function to use for cell classification. Default is `knn_weights_fun = NULL` that correspond the to [unweighted KNN algorithm](https://en.wikipedia.org/wiki/K-nearest_neighbors_algorithm). For further details on possible kernel functions to use, plese see this [blog-post](http://mlampros.github.io/2016/07/10/KernelKnn/) of original `KernelKnn` package.
+
+```{r classify, echo=TRUE,cache=TRUE,warning=FALSE,message=F,prompt=T}
+
+# Step 3. Cell classification with KNN.
+data = classify.cells(data = data,
+                      classes = data$embedded$ccl,
+                      k = 10,
+                      knn_method = "manhattan",
+                      knn_weights_fun = NULL)
+
+# show top ten classified cells
+head(data$embedded.predicted)
+```
+
+```{r performance, echo=TRUE,cache=TRUE,warning=FALSE,prompt=T}
+
+# Strip from cell name the cell-line
+# of origin of each mapped cell
+data$embedded.predicted$ccl = sapply(
+                            strsplit(x = rownames(data$embedded.predicted),
+                                     split = "_",fixed = T)
+                            ,function(x) x[1]
+                          )
+
+# Now we can compute the classification accuracy
+acc = sum(data$embedded.predicted$predicted.class==data$embedded.predicted$ccl)/nrow(data$embedded.predicted)*100
+cat("Classification accuracy is",round(acc,2),"%")
+```
+
+
+
+# Session info {.unnumbered}
+
+```{r sessionInfo, echo=FALSE}
+sessionInfo()
+```

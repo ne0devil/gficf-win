@@ -1,7 +1,4 @@
-library(gficf)
-library(ggplot2)
-library(ggbeeswarm)
-library(plyr)
+library(Matrix)
 
 M.raw = readRDS(file = "~/work/current/BRCA_AIRC_paper/paper_git/RData/RAW.filtered.BRCA.UMI.counts.5K.umi.rds")
 

@@ -34,7 +34,7 @@ classify.cells = function(data,classes,k=7,seed=18051982,knn_method="euclidean",
 
 #' Embed new cells in an existing space 
 #'
-#' This function embed new cells in an already existing space. For now it supports only UMAP and t-UMAP. Briefly new cells are first normalized with GF-ICF method but using as ICF weigth estimated on the existing cells and than projected in the existing PCA/LSA space before to be embedded in the already existing UMAP space via umap_transform function. 
+#' This function embed new cells in an already existing space. For now it supports only UMAP and t-UMAP. Briefly new cells are first normalized with GF-ICF method but using as ICF weigth estimated on the existing cells and than projected in the existing PCA/NMF space before to be embedded in the already existing UMAP space via umap_transform function. 
 #' 
 #' @param data list; GFICF object
 #' @param x Matrix; UMI counts matrix of cells to embedd.
@@ -50,7 +50,7 @@ classify.cells = function(data,classes,k=7,seed=18051982,knn_method="euclidean",
 #' @import RcppML
 #' 
 #' @export
-embedNewCells = function(data,x,nt=2,seed=18051982, normalize=TRUE,verbose=TRUE)
+scMAP = function(data,x,nt=2,seed=18051982, normalize=TRUE,verbose=TRUE)
 {
   if(data$reduction=="tsne") {stop("Not supported with t-SNE reduction!!")}
   if(length(intersect(rownames(data$gficf),rownames(x)))==0) {stop("No common genes between the two dataset! Please check if gene identifiers beween two dataset correspond")}
