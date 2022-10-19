@@ -1,0 +1,213 @@
+---
+title: "GFICF Getting Started"
+author:
+- name: Gennaro Gambardella
+  affiliation: TIGEM (Telethon Institute of Genetics and Medicine) 
+  email: gambardella@tigem.it
+package: gficf
+output:
+  BiocStyle::html_document
+vignette: |
+  %\VignetteIndexEntry{GFICF Getting Started}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+# Getting started with `gficf` package
+
+Welcome to GF-ICF! `gficf` is an R package for normalization, visualization and analysis of of single-cell RNA sequencing data, based on a data transformation model called term frequency–inverse document frequency [(TF-IDF)](https://en.wikipedia.org/wiki/Tf%E2%80%93idf), which has been extensively used in the field of text mining. This vignette gives an overview and introduction to `gficf`’s functionality.  
+
+For this tutorial, we will be analyzing the small_BC_atlas dataset included in the `gficf` package. This dataset is a small version (comprising only 4,760 cells) of the Breast cancer cell-line atlas we recently published ([Gambardella et al.](https://www.nature.com/articles/s41467-022-29358-6)).
+
+# QC and selecting cells for further analysis
+`gficf` allows you to automatically filter cells based on several criteria. These include
+
+1. The total number of UMI detected within a cell (this correlates strongly with unique genes)
+2. The number of unique genes detected in each cell.
+    a. This because low-quality cells or empty droplets will often have very few genes
+    b. While cell doublets or multiplets may exhibit an aberrant high gene count
+3. The percentage of reads that map to the mitochondrial genome
+    a. This because low-quality / dying cells often exhibit extensive mitochondrial contamination
+
+Both point 2 and 3 are done automatically by the tool filtering out cells with low gene ratio detection and high MT ratio. This is accomplished  using loess regression to fit the relationships between the total number of UMI in a cell (in log scale) and the ratio of detected genes over total UMI (or total MT counts over total UMI).
+
+**IMPORTANT:** For now only datasets for which genes are reported as ENSEMBLE id are supported! 
+
+```{r qc,echo=TRUE,cache=TRUE,warning=FALSE,prompt=T,results='hold'}
+require(gficf)
+require(ggplot2)
+
+# Load the small BC atlas
+data("small_BC_atlas")
+
+# Filter out cells
+data = filterCells(counts = small_BC_atlas,
+                   organism = "human",
+                   plot = F,
+                   verbose = T,
+                   minUMI = 5000)
+```
+
+# Data Normalization and Visualization
+After cell QC, we can start to normalize raw UMI counts and filtering out lowly and rarely expressed genes. In particular here we discard genes expressed in less then 15 cells or in less then 5% of total cells but having an average expression in non-zero cells less then 1.12 UMI. We next perform PCA on the normalized data but using only over-dispersed (i.e.,highly variable) genes. Finally t-UMAP non-linear dimensional reduction is used to visualize the dataset (see Figure \@ref(fig:norm)).
+
+```{r norm, fig.cap="UMAP Plot. UMAP plot of the small_BC_atlas dataset after cells have been normalized with GF-ICF model.",echo=TRUE,cache=TRUE,warning=FALSE,message=F,prompt=T,results='hide'}
+# Data normalization and gene filtering
+data <- gficf( QCdata = data,
+               cell_count_cutoff = 15,
+               nonz_mean_cutoff = 1.12,
+               cell_percentage_cutoff2 = 0.05,
+               normalize = T,
+               verbose = T)
+
+# Create PCA-subspace using overdispersed genes
+data <- runPCA(data = data,dim = 10,use.odgenes = T)
+
+# Create t-UMAP space
+data <-runReduction(data = data,reduction = "tumap",nt = 2,verbose = T)
+
+# Plot cells
+p = plotCells(data = data,pointShape = 19) + 
+    xlab("UMAP 1") + 
+    ylab("UMAP 2")
+
+plot(p)
+```
+
+
+# Cell Clustering
+In the package `gficf` the function `clustcells` implement the [Phenograph](https://www.cell.com/cell/fulltext/S0092-8674(15)00637-6) algorithm,
+which is a clustering method designed for high-dimensional single-cell data analysis. It works by creating a graph ("network") representing phenotypic similarities between cells by calculating the Jaccard coefficient between nearest-neighbor sets, and then identifying communities using the well known [Louvain method](https://sites.google.com/site/findcommunities/) or [Leiden algorithm](https://www.nature.com/articles/s41598-019-41695-z) in this graph. 
+
+In this particular implementation of Phenograph we use approximate nearest neighbors found using [RcppAnnoy](https://cran.r-project.org/package=RcppAnnoy)
+libraries present in the `uwot` package. The supported distance metrics for KNN that can be set trough the `dist.method` parameter are:
+
+* Euclidean (default)
+* Cosine
+* Manhattan
+* Hamming
+
+Please note that the Hamming support is a lot slower than the other metrics. It is not recomadded to use it if you have more than a few hundred features, and even then expect it to take several minutes during the index  building phase in situations where the Euclidean metric would take only a few seconds.  
+
+After computation of Jaccard distances among cells (with custom [RcppParallel](https://cran.r-project.org/package=RcppParallel) implementation), the Louvain or Leiden community detection algorithms can be run to identify cell clusters. The supported communities detection algorithm that can be set trough the `community.algo` parameter are:
+
+* Louvain classic (igraph implementation)
+* Louvian with modularity optimization
+* Louvain algorithm with multilevel refinement (default)
+* Leiden algorithm from [Traag et al. 2019](https://www.nature.com/articles/s41598-019-41695-z) (need to be installed first via `sudo -H pip install leidenalg igraph`)
+* Walktrap
+* Fastgreedy
+
+```{r clustering, fig.cap="Cell clusters. UMAP plot of the small_BC_atlas dataset where cells are color-coded according to the cluster they belong.",echo=TRUE,cache=TRUE,warning=FALSE,message=F,prompt=T,results='hold'}
+
+# Identify clusters
+data <- clustcells(data = data,
+                   community.algo = "louvain 3",
+                   nt = 2,
+                   resolution = .25,
+                   verbose = T)
+
+# Plot cells color coded acording to their cluster
+p = plotCells(data = data,colorBy = "cluster",pointShape = 19) + 
+              xlab("UMAP 1") +
+              ylab("UMAP 2")
+plot(p)
+```
+
+
+
+# Adding and plot cell metadata
+Cell metadata are stored into the data.frame named `embedded` of the `gficf` object (i.e., it can be accessed via `data$embedded`). Any column can be added and later plotted on top of the UMAP/t-SNE plot (Figure \@ref(fig:ccl)) thanks to the function `plotCells` and specifying in parameter `colorBy` the name of the column with which is intended to color-code cells. This data frame contains by default the UMAP/t-SNE coordinates of each cell. The row names of this data.frame correspond instead to the cell barcode.
+
+```{r ccl, fig.cap="UMAP plot. UMAP plot of the small_BC_atlas dataset where cells are color-coded according to their cell-line of origin.",echo=TRUE,cache=TRUE,warning=FALSE,message=F,prompt=T,results='hide'}
+
+# Cell meta-data can stored in the data$embedded data.frame
+# Let' add the info about the cell-line, stripping this information
+# from the name of the cell and storing it into ccl column.
+data$embedded$ccl = sapply(
+                            strsplit(x = rownames(data$embedded),
+                                     split = "_",fixed = T)
+                            ,function(x) x[1]
+                          )
+
+# We can now plot cell according to their cell-line of origin
+p = plotCells(data = data,colorBy = "ccl",pointShape = 19) + 
+    xlab("UMAP 1") + 
+    ylab("UMAP 2")
+
+plot(p)
+```
+
+```
+# show top 20 cells
+> head(data$embedded,20)
+```
+
+```{r metadata,echo=FALSE,cache=TRUE}
+library(DT)
+df = head(data$embedded,20)
+df$X = round(df$X,2)
+df$Y = round(df$Y,2)
+DT::datatable(df)
+```
+
+# Save and load `gficf` object.
+`gficf` object need to be saved/loaded with its specific functions. This because annoy index used by `uwot` package for UMAP is stored in memory and cannot be saved with standard `saveRDS()` or `save()` functions.
+
+```
+# save GFICF object
+> saveGFICF(data,file = "/path/where/to/save/object.gficf")
+
+# load GFICF object
+> data = loadGFICF(file = "/path/where/is/object.gficf")
+```
+
+# Tips and suggestions.
+## How can I read 10X files produced by Cell Ranger?
+Cell Ranger produce 3 output files (i.e., barcodes, features and matrix) usually stored in the same folder. `gficf` includes the `Read10X()` function that reads the output file prduced by cellranger pipeline and return as output the raw UMI count matrix. The values in this matrix represent the number of molecules for each gene (row) that are detected in each cell (column).
+```
+# Load 10x dataset
+> M = Read10X(data.dir = "/path/where/cellranger/files/are/")
+```
+
+## Where are my normalized counts?
+`gficf` normalized data are stored in the gfifc matrix that can be accessd via `data$gficf`
+
+```
+# show 10 rows of gficf normalized data
+> head(data$gficf)
+```
+
+## How can I run `gficf` without performing cell QC?
+In case you want to run gficf directley from raw UMI matrix this can be done using the parameter `M` of `gficf function` as showed below.
+```
+# Data normalization and gene filtering
+# from RAW counts
+> data <- gficf( M = small_BC_atlas,
+               cell_count_cutoff = 15,
+               nonz_mean_cutoff = 1.12,
+               cell_percentage_cutoff2 = 0.05,
+               normalize = T,
+               verbose = T)
+```
+
+## Where are QC metrics stored in `gficf`?
+The number of unique genes and total molecules calculated by `filterCells` function are in the `QC.metadata` data.frame. It can be accessed as below:
+
+```
+# Top ten row of QC metrics data.frame
+> head(data$QC.metadata)
+```
+
+## Are there alternative to PCA?
+`gficf` package inlude non-negative matrix factorization (NMF) as alternative to PCA before to apply t-SNE or UMAP reduction. NMF can be executed with the following command.
+```
+# Run NMF with all available cores minus one
+> data = runNMF(data = data,dim = 50,use.odgenes = T)
+```
+
+# Session info {.unnumbered}
+
+```{r sessionInfo, echo=FALSE}
+sessionInfo()
+```
