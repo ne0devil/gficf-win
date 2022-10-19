@@ -11,8 +11,10 @@ of Jaccard Coefficient estimation using [RcppParallel](https://cran.r-project.or
 The package also include data reduction with either Principal Component Analisys (PCA) or
 non-negative matrix factorization [RcppML](https://github.com/zdebruine/RcppML) before to apply t-SNE or UMAP for single cell data visualization.   
 
-**Examples & Functionality**:
-* coming soon ...
+**Examples & Functionality**:  
+* <a href="https://htmlpreview.github.io/?https://github.com/gambalab/gficf/blob/master/inst/doc/index.html" target="_blank">Getting Started</a>  
+* Single-cell Gene Set Enrichement Analysis (scGSEA)  
+* Single-cell Mapper (scMAP)  
 
 
 # Installation
