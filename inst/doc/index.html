@@ -3489,7 +3489,7 @@ Figure 2: <span class="caption-title">Cell clusters</span><br>UMAP plot of the s
 </div>
 <div id="adding-and-plot-cell-metadata" class="section level1" number="5">
 <h1><span class="header-section-number">5</span> Adding and plot cell metadata</h1>
-<p>Cell metadata are stored into the <code>data.frame</code> named embedded of the gficf object (it can be accessed via <code>data$embedded</code>). Any column can be added and later plotted on top of the UMAP/t-SNE plot (Figure <a href="#fig:ccl">3</a>). This data frame contains the UMAP/t-SNE coordinates for each cell. The row names of this data.frame correspond to the cell barcode.</p>
+<p>Cell metadata are stored into the data.frame named <code>embedded</code> of the <code>gficf</code> object (i.e., it can be accessed via <code>data$embedded</code>). Any column can be added and later plotted on top of the UMAP/t-SNE plot (Figure <a href="#fig:ccl">3</a>) thanks to the function <code>plotCells</code> and specifying in parameter <code>colorBy</code> the name of the column with which is intended to color-code cells. This data frame contains by default the UMAP/t-SNE coordinates of each cell. The row names of this data.frame correspond instead to the cell barcode.</p>
 <pre class="r"><code>&gt; # Cell meta-data can stored in the data$embedded data.frame
 &gt; # Let&#39; add the info about the cell-line, stripping this information
 &gt; # from the name of the cell and storing it into ccl column.
@@ -3583,89 +3583,20 @@ Figure 3: <span class="caption-title">UMAP plot</span><br>UMAP plot of the small
 ## [11] LC_MEASUREMENT=it_IT.UTF-8 LC_IDENTIFICATION=C       
 ## 
 ## attached base packages:
-## [1] stats4    stats     graphics  grDevices utils     datasets  methods  
-## [8] base     
+## [1] stats     graphics  grDevices utils     datasets  methods   base     
 ## 
 ## other attached packages:
-##  [1] ensembldb_2.20.2        AnnotationFilter_1.20.0 GenomicFeatures_1.48.4 
-##  [4] AnnotationDbi_1.58.0    Biobase_2.56.0          GenomicRanges_1.48.0   
-##  [7] GenomeInfoDb_1.32.4     IRanges_2.30.1          S4Vectors_0.34.0       
-## [10] BiocGenerics_0.42.0     ggplot2_3.3.6           Matrix_1.5-1           
-## [13] gficf_2.0.0             RcppML_0.5.4            BiocStyle_2.24.0       
+## [1] BiocStyle_2.24.0
 ## 
 ## loaded via a namespace (and not attached):
-##   [1] AnnotationHub_3.4.0           fastmatch_1.1-3              
-##   [3] BiocFileCache_2.4.0           RcppEigen_0.3.3.9.2          
-##   [5] plyr_1.8.7                    igraph_1.3.5                 
-##   [7] lazyeval_0.2.2                GSEABase_1.58.0              
-##   [9] splines_4.2.1                 BiocParallel_1.30.3          
-##  [11] sva_3.44.0                    digest_0.6.29                
-##  [13] htmltools_0.5.3               fansi_1.0.3                  
-##  [15] magrittr_2.0.3                memoise_2.0.1                
-##  [17] ScaledMatrix_1.4.1            pointr_0.2.0                 
-##  [19] limma_3.52.4                  Biostrings_2.64.1            
-##  [21] annotate_1.74.0               RcppParallel_5.1.5           
-##  [23] matrixStats_0.62.0            prettyunits_1.1.1            
-##  [25] colorspace_2.0-3              blob_1.2.3                   
-##  [27] rappdirs_0.3.3                ggrepel_0.9.1                
-##  [29] xfun_0.33                     dplyr_1.0.10                 
-##  [31] crayon_1.5.2                  RCurl_1.98-1.9               
-##  [33] jsonlite_1.8.2                graph_1.74.0                 
-##  [35] genefilter_1.78.0             survival_3.4-0               
-##  [37] glue_1.6.2                    gtable_0.3.1                 
-##  [39] zlibbioc_1.42.0               XVector_0.36.0               
-##  [41] leiden_0.4.3                  DelayedArray_0.22.0          
-##  [43] BiocSingular_1.12.0           Rhdf5lib_1.18.2              
-##  [45] SingleCellExperiment_1.18.1   HDF5Array_1.24.2             
-##  [47] scales_1.2.1                  edgeR_3.38.4                 
-##  [49] DBI_1.1.3                     Rcpp_1.0.9                   
-##  [51] xtable_1.8-4                  progress_1.2.2               
-##  [53] reticulate_1.26               bit_4.0.4                    
-##  [55] rsvd_1.0.5                    GSVA_1.44.5                  
-##  [57] httr_1.4.4                    fgsea_1.22.0                 
-##  [59] ellipsis_0.3.2                pkgconfig_2.0.3              
-##  [61] XML_3.99-0.11                 sass_0.4.2                   
-##  [63] uwot_0.1.14                   dbplyr_2.2.1                 
-##  [65] locfit_1.5-9.6                utf8_1.2.2                   
-##  [67] reshape2_1.4.4                tidyselect_1.1.2             
-##  [69] rlang_1.0.6                   later_1.3.0                  
-##  [71] munsell_0.5.0                 BiocVersion_3.15.2           
-##  [73] tools_4.2.1                   cachem_1.0.6                 
-##  [75] cli_3.4.1                     generics_0.1.3               
-##  [77] RSQLite_2.2.18                evaluate_0.17                
-##  [79] stringr_1.4.1                 fastmap_1.1.0                
-##  [81] yaml_2.3.5                    babelgene_22.9               
-##  [83] knitr_1.40                    bit64_4.0.5                  
-##  [85] purrr_0.3.5                   KEGGREST_1.36.3              
-##  [87] nlme_3.1-160                  sparseMatrixStats_1.8.0      
-##  [89] mime_0.12                     xml2_1.3.3                   
-##  [91] biomaRt_2.52.0                compiler_4.2.1               
-##  [93] rstudioapi_0.14               filelock_1.0.2               
-##  [95] curl_4.3.3                    png_0.1-7                    
-##  [97] interactiveDisplayBase_1.34.0 tibble_3.1.8                 
-##  [99] bslib_0.4.0                   stringi_1.7.8                
-## [101] RSpectra_0.16-1               lattice_0.20-45              
-## [103] ProtGenerics_1.28.0           vctrs_0.4.2                  
-## [105] pillar_1.8.1                  lifecycle_1.0.3              
-## [107] rhdf5filters_1.8.0            BiocManager_1.30.18          
-## [109] jquerylib_0.1.4               cowplot_1.1.1                
-## [111] data.table_1.14.2             bitops_1.0-7                 
-## [113] irlba_2.3.5.1                 httpuv_1.6.6                 
-## [115] rtracklayer_1.56.1            R6_2.5.1                     
-## [117] BiocIO_1.6.0                  bookdown_0.29                
-## [119] promises_1.2.0.1              gridExtra_2.3                
-## [121] codetools_0.2-18              KernelKnn_1.1.4              
-## [123] MASS_7.3-58.1                 assertthat_0.2.1             
-## [125] rhdf5_2.40.0                  SummarizedExperiment_1.26.1  
-## [127] rjson_0.2.21                  withr_2.5.0                  
-## [129] GenomicAlignments_1.32.1      Rsamtools_2.12.0             
-## [131] harmony_0.1.0                 GenomeInfoDbData_1.2.8       
-## [133] mgcv_1.8-40                   parallel_4.2.1               
-## [135] hms_1.1.2                     grid_4.2.1                   
-## [137] beachmat_2.12.0               rmarkdown_2.17               
-## [139] DelayedMatrixStats_1.18.1     MatrixGenerics_1.8.1         
-## [141] Rtsne_0.16                    shiny_1.7.2                  
-## [143] restfulr_0.0.15</code></pre>
+##  [1] bookdown_0.29       digest_0.6.29       R6_2.5.1           
+##  [4] jsonlite_1.8.2      magrittr_2.0.3      evaluate_0.17      
+##  [7] stringi_1.7.8       cachem_1.0.6        rlang_1.0.6        
+## [10] cli_3.4.1           rstudioapi_0.14     jquerylib_0.1.4    
+## [13] bslib_0.4.0         rmarkdown_2.17      tools_4.2.1        
+## [16] stringr_1.4.1       xfun_0.33           yaml_2.3.5         
+## [19] fastmap_1.1.0       compiler_4.2.1      BiocManager_1.30.18
+## [22] htmltools_0.5.3     knitr_1.40          sass_0.4.2</code></pre>
 </div>
 
 
