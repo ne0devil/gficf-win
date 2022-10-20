@@ -699,7 +699,7 @@ function toggle_visibility(id1) {
 <h1 class="title toc-ignore">Single-cell Mapper</h1>
 <p class="author-name">Gennaro Gambardella<span class="affil-mark">1</span></p>
 <p class="author-affiliation"><span class="affil-mark">1</span>TIGEM (Telethon Institute of Genetics and Medicine)</p>
-<h4 class="date">19 ottobre 2022</h4>
+<h4 class="date">20 ottobre 2022</h4>
 <h4 class="package">Package</h4>
 <p>gficf 2.0.0</p>
 
@@ -708,16 +708,16 @@ function toggle_visibility(id1) {
 <h1>Contents</h1>
 <div id="TOC">
 <ul>
-<li><a href="#getting-started" id="toc-getting-started"><span class="toc-section-number">1</span> Getting started</a></li>
-<li><a href="#building-the-reference-atlas" id="toc-building-the-reference-atlas"><span class="toc-section-number">2</span> Building the reference atlas</a></li>
-<li><a href="#how-to-map-new-cells-into-a-reference-atlas" id="toc-how-to-map-new-cells-into-a-reference-atlas"><span class="toc-section-number">3</span> How to map new cells into a reference atlas</a></li>
-<li><a href="#how-to-contextualize-mapped-cells" id="toc-how-to-contextualize-mapped-cells"><span class="toc-section-number">4</span> How to contextualize mapped cells</a></li>
+<li><a href="#introduction" id="toc-introduction">Introduction</a></li>
+<li><a href="#building-the-reference-atlas" id="toc-building-the-reference-atlas"><span class="toc-section-number">1</span> Building the reference atlas</a></li>
+<li><a href="#how-to-map-new-cells-into-a-reference-atlas" id="toc-how-to-map-new-cells-into-a-reference-atlas"><span class="toc-section-number">2</span> How to map new cells into a reference atlas</a></li>
+<li><a href="#how-to-contextualize-mapped-cells" id="toc-how-to-contextualize-mapped-cells"><span class="toc-section-number">3</span> How to contextualize mapped cells</a></li>
 <li><a href="#session-info" id="toc-session-info">Session info</a></li>
 </ul>
 </div>
 
-<div id="getting-started" class="section level1" number="1">
-<h1><span class="header-section-number">1</span> Getting started</h1>
+<div id="introduction" class="section level1 unnumbered">
+<h1>Introduction</h1>
 <p>Single-cell Mapper (scMAP) is a transfer learning algorithm that combines text mining data transformation and a k-nearest neighbours’ (KNN) classifier to map a query set of single-cell transcriptional profiles on top of a reference atlas. scMAP consists of three main steps:</p>
 <ol style="list-style-type: decimal">
 <li><p>In the first step query cell profiles are normalized with the GF-ICF method but using the ICF weights learned by using the reference atlas;</p></li>
@@ -726,8 +726,8 @@ function toggle_visibility(id1) {
 </ol>
 <p>Please read the manuscript for additional details and estimated performances of the method.</p>
 </div>
-<div id="building-the-reference-atlas" class="section level1" number="2">
-<h1><span class="header-section-number">2</span> Building the reference atlas</h1>
+<div id="building-the-reference-atlas" class="section level1" number="1">
+<h1><span class="header-section-number">1</span> Building the reference atlas</h1>
 <p>For this tutorial, we will be using as a reference atlas the <code>small_BC_atlas dataset</code> included in the <code>gficf</code> package (Figure <a href="#fig:atlas">1</a>). This dataset is a small version (comprising only 4,760 cells) of the Breast cancer cell-line atlas we recently published (<a href="https://www.nature.com/articles/s41467-022-29358-6">Gambardella et al.</a>).</p>
 <pre class="r"><code>&gt; require(gficf)
 &gt; require(ggplot2)
@@ -774,8 +774,8 @@ Figure 1: <span class="caption-title">UMAP of referece BC Atlas</span><br>UMAP p
 </p>
 </div>
 </div>
-<div id="how-to-map-new-cells-into-a-reference-atlas" class="section level1" number="3">
-<h1><span class="header-section-number">3</span> How to map new cells into a reference atlas</h1>
+<div id="how-to-map-new-cells-into-a-reference-atlas" class="section level1" number="2">
+<h1><span class="header-section-number">2</span> How to map new cells into a reference atlas</h1>
 <p>After we have built our reference atlas (Figure <a href="#fig:atlas">1</a>), we use the 930 cells available into the <code>test_BC_atlas</code> dataset to test our mapping algorithm (Figure <a href="#fig:map">2</a>). Mapping of new cells into the embedded space of the reference atlas is performed by the <code>scMAP()</code> function. Metadata and coordinate of new mapped cells are stored into <code>data$embedded.predicted</code> data.frame.</p>
 <pre class="r"><code>&gt; # Step 2. Map new cells into reference atlas.
 &gt; # 2.1 Load the new cells to map
@@ -803,8 +803,8 @@ Figure 2: <span class="caption-title">UMAP of referece BC Atlas and mapped cells
 </p>
 </div>
 </div>
-<div id="how-to-contextualize-mapped-cells" class="section level1" number="4">
-<h1><span class="header-section-number">4</span> How to contextualize mapped cells</h1>
+<div id="how-to-contextualize-mapped-cells" class="section level1" number="3">
+<h1><span class="header-section-number">3</span> How to contextualize mapped cells</h1>
 <p>Finally we can use KNN to classify and thus contextualize mapped cells into the reference atlas. In this example we try to infer cell-line of origin of each mapped for wich we got a classification accuracy of 93.23%. Specifically, this task can be performed by the function <code>classify.cells()</code> of <code>gficf</code> package in which the class of reference cells must be specified by the <code>classes</code> parameter. Here we use as class of each cell its cell-line of origin. Classification results are stored into <code>data$embedded.predicted</code> data.frame where the column <code>predicted.class</code> reports the predicted class and the column <code>class.prob</code> its predicted probability.</p>
 <p>The <code>classify.cells()</code> function is built on top of <a href="https://github.com/mlampros/KernelKnn"><code>KernelKnn</code></a> package and thus implement several measures to compute the distances among cells that can be specified trough the <code>knn_method</code> parameter. At the same time the parameter <code>knn_weights_fun</code> can be used to specify the kernel function to use for cell classification. Default is <code>knn_weights_fun = NULL</code> that correspond the to <a href="https://en.wikipedia.org/wiki/K-nearest_neighbors_algorithm">unweighted KNN algorithm</a>. For further details on possible kernel functions to use, plese see this <a href="http://mlampros.github.io/2016/07/10/KernelKnn/">blog-post</a> of original <code>KernelKnn</code> package.</p>
 <pre class="r"><code>&gt; # Step 3. Cell classification with KNN.
@@ -858,90 +858,17 @@ Figure 2: <span class="caption-title">UMAP of referece BC Atlas and mapped cells
 ## [1] stats     graphics  grDevices utils     datasets  methods   base     
 ## 
 ## other attached packages:
-## [1] ggplot2_3.3.6    Matrix_1.5-1     gficf_2.0.0      RcppML_0.5.4    
-## [5] BiocStyle_2.24.0
+## [1] BiocStyle_2.24.0
 ## 
 ## loaded via a namespace (and not attached):
-##   [1] AnnotationHub_3.4.0           fastmatch_1.1-3              
-##   [3] BiocFileCache_2.4.0           RcppEigen_0.3.3.9.2          
-##   [5] plyr_1.8.7                    igraph_1.3.5                 
-##   [7] lazyeval_0.2.2                GSEABase_1.58.0              
-##   [9] splines_4.2.1                 BiocParallel_1.30.3          
-##  [11] GenomeInfoDb_1.32.4           sva_3.44.0                   
-##  [13] digest_0.6.29                 ensembldb_2.20.2             
-##  [15] htmltools_0.5.3               magick_2.7.3                 
-##  [17] fansi_1.0.3                   magrittr_2.0.3               
-##  [19] memoise_2.0.1                 ScaledMatrix_1.4.1           
-##  [21] pointr_0.2.0                  limma_3.52.4                 
-##  [23] Biostrings_2.64.1             annotate_1.74.0              
-##  [25] RcppParallel_5.1.5            matrixStats_0.62.0           
-##  [27] prettyunits_1.1.1             colorspace_2.0-3             
-##  [29] blob_1.2.3                    rappdirs_0.3.3               
-##  [31] ggrepel_0.9.1                 xfun_0.33                    
-##  [33] dplyr_1.0.10                  crayon_1.5.2                 
-##  [35] RCurl_1.98-1.9                jsonlite_1.8.2               
-##  [37] graph_1.74.0                  genefilter_1.78.0            
-##  [39] survival_3.4-0                glue_1.6.2                   
-##  [41] gtable_0.3.1                  zlibbioc_1.42.0              
-##  [43] XVector_0.36.0                leiden_0.4.3                 
-##  [45] DelayedArray_0.22.0           BiocSingular_1.12.0          
-##  [47] Rhdf5lib_1.18.2               SingleCellExperiment_1.18.1  
-##  [49] BiocGenerics_0.42.0           HDF5Array_1.24.2             
-##  [51] scales_1.2.1                  edgeR_3.38.4                 
-##  [53] DBI_1.1.3                     Rcpp_1.0.9                   
-##  [55] xtable_1.8-4                  progress_1.2.2               
-##  [57] reticulate_1.26               bit_4.0.4                    
-##  [59] rsvd_1.0.5                    stats4_4.2.1                 
-##  [61] GSVA_1.44.5                   httr_1.4.4                   
-##  [63] fgsea_1.22.0                  ellipsis_0.3.2               
-##  [65] farver_2.1.1                  pkgconfig_2.0.3              
-##  [67] XML_3.99-0.11                 sass_0.4.2                   
-##  [69] uwot_0.1.14                   dbplyr_2.2.1                 
-##  [71] locfit_1.5-9.6                utf8_1.2.2                   
-##  [73] labeling_0.4.2                reshape2_1.4.4               
-##  [75] tidyselect_1.1.2              rlang_1.0.6                  
-##  [77] later_1.3.0                   AnnotationDbi_1.58.0         
-##  [79] munsell_0.5.0                 BiocVersion_3.15.2           
-##  [81] tools_4.2.1                   cachem_1.0.6                 
-##  [83] cli_3.4.1                     generics_0.1.3               
-##  [85] RSQLite_2.2.18                evaluate_0.17                
-##  [87] stringr_1.4.1                 fastmap_1.1.0                
-##  [89] yaml_2.3.5                    babelgene_22.9               
-##  [91] knitr_1.40                    bit64_4.0.5                  
-##  [93] purrr_0.3.5                   KEGGREST_1.36.3              
-##  [95] AnnotationFilter_1.20.0       nlme_3.1-160                 
-##  [97] sparseMatrixStats_1.8.0       mime_0.12                    
-##  [99] xml2_1.3.3                    biomaRt_2.52.0               
-## [101] compiler_4.2.1                rstudioapi_0.14              
-## [103] filelock_1.0.2                curl_4.3.3                   
-## [105] png_0.1-7                     interactiveDisplayBase_1.34.0
-## [107] tibble_3.1.8                  bslib_0.4.0                  
-## [109] stringi_1.7.8                 highr_0.9                    
-## [111] RSpectra_0.16-1               GenomicFeatures_1.48.4       
-## [113] lattice_0.20-45               ProtGenerics_1.28.0          
-## [115] vctrs_0.4.2                   pillar_1.8.1                 
-## [117] lifecycle_1.0.3               rhdf5filters_1.8.0           
-## [119] BiocManager_1.30.18           jquerylib_0.1.4              
-## [121] RcppAnnoy_0.0.19              cowplot_1.1.1                
-## [123] data.table_1.14.2             bitops_1.0-7                 
-## [125] irlba_2.3.5.1                 httpuv_1.6.6                 
-## [127] rtracklayer_1.56.1            GenomicRanges_1.48.0         
-## [129] R6_2.5.1                      BiocIO_1.6.0                 
-## [131] bookdown_0.29                 promises_1.2.0.1             
-## [133] gridExtra_2.3                 IRanges_2.30.1               
-## [135] codetools_0.2-18              KernelKnn_1.1.4              
-## [137] MASS_7.3-58.1                 assertthat_0.2.1             
-## [139] rhdf5_2.40.0                  SummarizedExperiment_1.26.1  
-## [141] rjson_0.2.21                  withr_2.5.0                  
-## [143] GenomicAlignments_1.32.1      Rsamtools_2.12.0             
-## [145] harmony_0.1.0                 S4Vectors_0.34.0             
-## [147] GenomeInfoDbData_1.2.8        mgcv_1.8-40                  
-## [149] parallel_4.2.1                hms_1.1.2                    
-## [151] grid_4.2.1                    beachmat_2.12.0              
-## [153] rmarkdown_2.17                DelayedMatrixStats_1.18.1    
-## [155] MatrixGenerics_1.8.1          Rtsne_0.16                   
-## [157] Biobase_2.56.0                shiny_1.7.2                  
-## [159] restfulr_0.0.15</code></pre>
+##  [1] bookdown_0.29       digest_0.6.29       R6_2.5.1           
+##  [4] jsonlite_1.8.2      magrittr_2.0.3      evaluate_0.17      
+##  [7] stringi_1.7.8       cachem_1.0.6        rlang_1.0.6        
+## [10] cli_3.4.1           rstudioapi_0.14     jquerylib_0.1.4    
+## [13] bslib_0.4.0         rmarkdown_2.17      tools_4.2.1        
+## [16] stringr_1.4.1       xfun_0.33           yaml_2.3.5         
+## [19] fastmap_1.1.0       compiler_4.2.1      BiocManager_1.30.18
+## [22] htmltools_0.5.3     knitr_1.40          sass_0.4.2</code></pre>
 </div>
 
 
