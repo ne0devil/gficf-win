@@ -82,6 +82,37 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// armaManhattan
+arma::sp_mat armaManhattan(const arma::sp_mat& m, int ncores, bool verbose, bool full, bool diag);
+RcppExport SEXP _gficf_armaManhattan(SEXP mSEXP, SEXP ncoresSEXP, SEXP verboseSEXP, SEXP fullSEXP, SEXP diagSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::sp_mat& >::type m(mSEXP);
+    Rcpp::traits::input_parameter< int >::type ncores(ncoresSEXP);
+    Rcpp::traits::input_parameter< bool >::type verbose(verboseSEXP);
+    Rcpp::traits::input_parameter< bool >::type full(fullSEXP);
+    Rcpp::traits::input_parameter< bool >::type diag(diagSEXP);
+    rcpp_result_gen = Rcpp::wrap(armaManhattan(m, ncores, verbose, full, diag));
+    return rcpp_result_gen;
+END_RCPP
+}
+// armaCorr
+arma::sp_mat armaCorr(const arma::mat& m, int ncores, bool verbose, bool full, bool diag, bool dist);
+RcppExport SEXP _gficf_armaCorr(SEXP mSEXP, SEXP ncoresSEXP, SEXP verboseSEXP, SEXP fullSEXP, SEXP diagSEXP, SEXP distSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::mat& >::type m(mSEXP);
+    Rcpp::traits::input_parameter< int >::type ncores(ncoresSEXP);
+    Rcpp::traits::input_parameter< bool >::type verbose(verboseSEXP);
+    Rcpp::traits::input_parameter< bool >::type full(fullSEXP);
+    Rcpp::traits::input_parameter< bool >::type diag(diagSEXP);
+    Rcpp::traits::input_parameter< bool >::type dist(distSEXP);
+    rcpp_result_gen = Rcpp::wrap(armaCorr(m, ncores, verbose, full, diag, dist));
+    return rcpp_result_gen;
+END_RCPP
+}
 // rcpp_WMU_test
 Rcpp::NumericMatrix rcpp_WMU_test(Rcpp::NumericMatrix M, Rcpp::NumericVector idx1, Rcpp::NumericVector idx2);
 RcppExport SEXP _gficf_rcpp_WMU_test(SEXP MSEXP, SEXP idx1SEXP, SEXP idx2SEXP) {
@@ -129,6 +160,8 @@ static const R_CallMethodDef CallEntries[] = {
     {"_gficf_armaColSumFull", (DL_FUNC) &_gficf_armaColSumFull, 3},
     {"_gficf_armaColSumSparse", (DL_FUNC) &_gficf_armaColSumSparse, 3},
     {"_gficf_colMeanVarS", (DL_FUNC) &_gficf_colMeanVarS, 2},
+    {"_gficf_armaManhattan", (DL_FUNC) &_gficf_armaManhattan, 5},
+    {"_gficf_armaCorr", (DL_FUNC) &_gficf_armaCorr, 6},
     {"_gficf_rcpp_WMU_test", (DL_FUNC) &_gficf_rcpp_WMU_test, 3},
     {"_gficf_rcpp_parallel_jaccard_coef", (DL_FUNC) &_gficf_rcpp_parallel_jaccard_coef, 2},
     {"_gficf_rcpp_parallel_WMU_test", (DL_FUNC) &_gficf_rcpp_parallel_WMU_test, 3},

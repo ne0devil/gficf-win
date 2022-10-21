@@ -21,6 +21,14 @@ colMeanVarS <- function(m, ncores = 1L) {
     .Call(`_gficf_colMeanVarS`, m, ncores)
 }
 
+armaManhattan <- function(m, ncores = 1L, verbose = TRUE, full = FALSE, diag = TRUE) {
+    .Call(`_gficf_armaManhattan`, m, ncores, verbose, full, diag)
+}
+
+armaCorr <- function(m, ncores = 1L, verbose = TRUE, full = FALSE, diag = TRUE, dist = TRUE) {
+    .Call(`_gficf_armaCorr`, m, ncores, verbose, full, diag, dist)
+}
+
 rcpp_WMU_test <- function(M, idx1, idx2) {
     .Call(`_gficf_rcpp_WMU_test`, M, idx1, idx2)
 }
