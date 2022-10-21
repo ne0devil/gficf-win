@@ -6,11 +6,13 @@
 \usage{
 runScGSEA(
   data,
-  gmt.file,
+  geneID,
+  species,
+  category,
+  subcategory = NULL,
+  pathway.list = NULL,
   nsim = 10000,
-  convertToEns = T,
-  convertHu2Mm = F,
-  nt = 2,
+  nt = 0,
   minSize = 15,
   maxSize = Inf,
   verbose = TRUE,
@@ -24,15 +26,19 @@ runScGSEA(
 \arguments{
 \item{data}{list; GFICF object}
 
-\item{gmt.file}{characters; Path to gmt file from MSigDB}
+\item{geneID}{characters; The type of gene identifier to use, such as ensamble of symbol.}
+
+\item{species}{characters; Species name, such as human or mouse.}
+
+\item{category}{characters; MSigDB collection abbreviation, such as H or C1.}
+
+\item{subcategory}{characters; MSigDB sub-collection abbreviation, such as CGP or BP.}
+
+\item{pathway.list}{list; Custom list of pathways. Each element correspond to a pathway a and contains a vector of genes.}
 
 \item{nsim}{integer; number of simulation used to compute ES significance.}
 
-\item{convertToEns}{boolean: Convert gene sets from gene symbols to Ensable id.}
-
-\item{convertHu2Mm}{boolean: Convert gene sets from human symbols to Mouse Ensable id.}
-
-\item{nt}{numeric; Number of cpu to use for the GSEA and NMF}
+\item{nt}{numeric; Number of cpu to use for the GSEA and NMF. Default is 0 (i.e., all available cores minus one)}
 
 \item{minSize}{numeric; Minimal size of a gene set to test (default 15). All pathways below the threshold are excluded.}
 

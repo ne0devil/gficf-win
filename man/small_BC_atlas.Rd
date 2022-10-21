@@ -3,7 +3,7 @@
 \docType{data}
 \name{small_BC_atlas}
 \alias{small_BC_atlas}
-\title{Single cell breast cancer atlas}
+\title{Small Single cell breast cancer atlas}
 \format{
 ## `small_BC_atlas`
 A Matrix of 4,760 cells
