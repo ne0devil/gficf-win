@@ -177,8 +177,9 @@ RunModularityClustering <- function(SNN = matrix(), modularity = 1, resolution =
 #' @import uwot
 #' @import Matrix
 #' @export
-clustcellsBYscGSEA <- function(data,pca=NULL,method="phenograph",k=15, resolution = 0.25, n.start = 50, n.iter = 250, nt=0, verbose=T, seed=180582)
+clustcellsBYscGSEA <- function(data,pca=NULL,k=10, resolution = 0.25, n.start = 50, n.iter = 250, nt=0, verbose=T, seed=180582)
 {
+  method="phenograph"
   if (is.null(data$scgsea)) {stop("Run first runScGSEA function")}
   method = base::match.arg(arg = method,choices = c("phenograph","hierarchical"),several.ok = F)
   
