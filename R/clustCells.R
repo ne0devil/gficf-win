@@ -196,9 +196,9 @@ clustcellsBYscGSEA <- function(data,pca=NULL,k=10, resolution = 0.25, n.start = 
     }
     
     if (ncol(x)>100) {
-      neigh = uwot:::find_nn(x,k=k,include_self = F,n_threads = nt,verbose = verbose,method = "annoy",metric=dist.method)$idx
+      neigh = uwot:::find_nn(x,k=k,include_self = F,n_threads = nt,verbose = verbose,method = "annoy",metric="manhattan")$idx
     } else {
-      neigh = uwot:::find_nn(x,k=k,include_self = F,n_threads = nt,verbose = verbose,method = "fnn",metric=dist.method)$idx
+      neigh = uwot:::find_nn(x,k=k,include_self = F,n_threads = nt,verbose = verbose,method = "fnn",metric="manhattan")$idx
     }
     rm(x)
     
