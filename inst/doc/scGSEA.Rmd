@@ -1,0 +1,135 @@
+---
+title: "Single-cell Gene Set Enrichement Analysis"
+author:
+- name: Gennaro Gambardella
+  affiliation: TIGEM (Telethon Institute of Genetics and Medicine) 
+package: gficf
+output:
+  BiocStyle::html_document
+vignette: |
+  %\VignetteIndexEntry{Single-cell Gene Set Enrichement Analysis}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+# Introduction {.unnumbered}
+
+single-cell Gene Set Enrichment Analysis (scGSEA) is a bioinformatic method that could measure the activity of an a priori defined collection of gene sets (i.e., pathways) at the single cell resolution. It that takes advantage of the informative biological signals spreading across the latent factors of gene expression values obtained from non-negative matrix factorization. The scGSEA method starts from a set of single-cell expression profiles and a collection of gene sets and scores their cumulative expression (i.e., pathway activity) in each of the profiled cells (see manucript for details).
+
+# Data Normalization and Visualization
+For this tutorial, we will be using as a reference atlas the `small_BC_atlas dataset` included in the `gficf` package (Figure \@ref(fig:atlas)). This dataset is a small version (comprising only 4,760 cells) of the Breast cancer cell-line atlas we recently published ([Gambardella et al.](https://www.nature.com/articles/s41467-022-29358-6)).
+
+```{R atlas, fig.cap="UMAP Plot. UMAP plot of the small_BC_atlas dataset after cells have been normalized with GF-ICF model. Cell are color coded according to thei cell line of origin.",echo=TRUE,cache=TRUE,warning=FALSE,message=FALSE,prompt=TRUE,results='hide'}
+require(gficf)
+require(ggplot2)
+
+# Load the RAW UMI count matrix of small bc atlas
+data("small_BC_atlas")
+
+# Data normalization and gene filtering
+data <- gficf( M = small_BC_atlas)
+
+# Create PCA-subspace using overdispersed genes
+data <- runPCA(data = data,dim = 10,use.odgenes = T)
+
+# Create t-UMAP space
+data <-runReduction(data = data,reduction = "tumap",nt = 2,verbose = T,n_neighbors=150)
+
+# Cell meta-data can stored in the data$embedded data.frame
+# Let' add the info about the cell-line, stripping this information
+# from the name of the cell and storing it into ccl column.
+data$embedded$ccl = sapply(
+                            strsplit(x = rownames(data$embedded),
+                                     split = "_",fixed = T)
+                            ,function(x) x[1]
+                          )
+
+
+# Plot cells
+p = plotCells(data = data,pointShape = 19,colorBy = "ccl") + 
+    xlab("UMAP 1") + 
+    ylab("UMAP 2")
+
+plot(p)
+```
+
+# Performing scGSEA
+Single cell gene set enrichment analysis is performed by the function `runScGSEA()` of `gficf` package. All available gene sets from [msigdb database](http://www.gsea-msigdb.org/gsea/msigdb/collections.jsp). The list of gene setes to use can can be specified trough the `category` parameter. Here we access to msigdb gene set collection through [`msigdbr`](https://cran.r-project.org/web/packages/msigdbr/vignettes/msigdbr-intro.html) package (see it for further details).
+
+```{r collecion, warning=FALSE,message=FALSE,prompt=TRUE}
+require(msigdbr)
+
+# Show supported gene sets colections
+print(msigdbr::msigdbr_collections(),n=30)
+```
+```{r scgsea, warning=FALSE,message=FALSE,prompt=TRUE,results='hide'}
+# Run scGSEA using 50 hallmarks genes
+data = runScGSEA(data = data,
+                 geneID = "ensamble",
+                 species = "human",
+                 category = "H",
+                 nmf.k = 50,
+                 fdr.th = .1,
+                 rescale = "none",
+                 verbose = T)
+```
+
+# Cluster cells by pathway's activity levels
+Now that we have reconstructed pathway's activity at single cell level we can try to cluster cell according to that. `gficf` package implement phenograph algorithm. Phenograph is a clustering method designed for high-dimensional single-cell data analysis. It works by first creating a graph ("network") that represents phenotypic similarities among cells by calculating the Jaccard coefficient between nearest-neighbor sets, and then identifying communities using the [Louvain method](https://sites.google.com/site/findcommunities/) in the recostructed graph.
+
+```{r clust, fig.cap="",echo=TRUE,cache=TRUE,warning=FALSE,message=FALSE,prompt=TRUE,results='hide'}
+# Cluster cells with phenograph method but using
+# estimate cells pathway's activity levels
+data = clustcellsBYscGSEA(data,
+                          pca = 10,
+                          k = 8,
+                          resolution = .1,
+                          n.start = 10,
+                          n.iter = 50,
+                          verbose = T)
+
+# Plot clusters on top of UMAP representation
+p = plotCells(data = data,pointShape = 19,colorBy = "cluster.by.scGSEA") + 
+  xlab("UMAP 1") + 
+  ylab("UMAP 2")
+
+plot(p)
+```
+
+# Tips and Suggestions
+## How many factors of NMF I have to use for scGSEA?
+scGSEA is a tool that leverages NMF expression latent factors to infer pathway activity at a single cell level. Thus, by design, it inherits both benefits and limitations of the NMF model. A well know limit of this model, like other matrix decomposition techniques, is the choice of the exact number of factors to use. We generally recommend using at least 100 NMF factors on a large dataset comprising more than 10,000 cells, otherwise 50 should suffice.
+
+## How can I use a custom gene set list?
+If you want to use a custom list of gene sets you can pass it trough the parameter `pathway.list` of `runScGSEA()` function. Name of each element of this list **must be** unique and must represents the name of the pathway.
+
+## Where is the cell graph produced by phenograph?
+
+```{r graph, fig.cap="Cell Network. The cell network reconstructed by phenograph.",echo=TRUE,cache=TRUE,warning=FALSE,message=FALSE,prompt=TRUE,results='hide'}
+require(netbiov)
+
+# Exstract the graph and plot it
+g = data$scgsea$cell.graph
+g = igraph::simplify(data$scgsea$cell.graph)
+
+# print graph stats
+print(summary(g))
+
+# Plot the network
+hc <- rgb(t(col2rgb(heat.colors(20)))/255,alpha=.2)
+cl <- rgb(r=0, b=.7, g=1, alpha=.05)
+xx <- mst.plot.mod(g,
+                   vertex.color=cl,
+                   v.size=3,
+                   sf=-20,
+                   colors=hc,
+                   e.size=.5,
+                   mst.e.size=.75,
+                   layout.function=layout.fruchterman.reingold)
+```
+
+# Session info {.unnumbered}
+
+```{r sessionInfo, echo=FALSE}
+sessionInfo()
+```
