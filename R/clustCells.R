@@ -163,7 +163,6 @@ RunModularityClustering <- function(SNN = matrix(), modularity = 1, resolution =
 #' 
 #' @param data list; Input data (gficf object)
 #' @param pca numeric; If different from NULL data are reduced using pca component before to apply clustering algorithm (highly suggested when phenograph methos is choosen).
-#' @param method character; Clustering method to use such as phenograph or hierarchical.
 #' @param k integer; number of nearest neighbours (default:15) (used only used if method is phenograph)
 #' @param resolution Value of the resolution parameter, use a value above (below) 1.0 if you want to obtain a larger (smaller) number of communities. (used only used if method is phenograph)
 #' @param n.start Number of random starts (used only used if method is phenograph).
