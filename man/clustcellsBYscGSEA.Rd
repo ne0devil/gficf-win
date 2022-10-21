@@ -7,8 +7,7 @@
 clustcellsBYscGSEA(
   data,
   pca = NULL,
-  method = "phenograph",
-  k = 15,
+  k = 10,
   resolution = 0.25,
   n.start = 50,
   n.iter = 250,
@@ -21,8 +20,6 @@ clustcellsBYscGSEA(
 \item{data}{list; Input data (gficf object)}
 
 \item{pca}{numeric; If different from NULL data are reduced using pca component before to apply clustering algorithm (highly suggested when phenograph methos is choosen).}
-
-\item{method}{character; Clustering method to use such as phenograph or hierarchical.}
 
 \item{k}{integer; number of nearest neighbours (default:15) (used only used if method is phenograph)}
 
