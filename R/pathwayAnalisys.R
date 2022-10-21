@@ -149,11 +149,13 @@ runGSEA <- function(data,gmt.file,nsim=1000,convertToEns=T,convertHu2Mm=F,nt=2,m
 #' Compute GSEA for each cells across a set of input pathways by using NMF.
 #' 
 #' @param data list; GFICF object
-#' @param gmt.file characters; Path to gmt file from MSigDB
+#' @param geneID characters; The type of gene identifier to use, such as ensamble of symbol. 
+#' @param species characters; Species name, such as human or mouse.
+#' @param category characters; MSigDB collection abbreviation, such as H or C1.
+#' @param subcategory characters; MSigDB sub-collection abbreviation, such as CGP or BP.
+#' @param pathway.list list; Custom list of pathways. Each element correspond to a pathway a and contains a vector of genes.
 #' @param nsim integer; number of simulation used to compute ES significance.
-#' @param convertToEns boolean: Convert gene sets from gene symbols to Ensable id.
-#' @param convertHu2Mm boolean: Convert gene sets from human symbols to Mouse Ensable id.
-#' @param nt numeric; Number of cpu to use for the GSEA and NMF
+#' @param nt numeric; Number of cpu to use for the GSEA and NMF. Default is 0 (i.e., all available cores minus one)
 #' @param minSize numeric; Minimal size of a gene set to test (default 15). All pathways below the threshold are excluded.
 #' @param maxSize numeric; Maximal size of a gene set to test (default Inf). All pathways above the threshold are excluded.
 #' @param verbose boolean; Show the progress bar.
@@ -167,9 +169,13 @@ runGSEA <- function(data,gmt.file,nsim=1000,convertToEns=T,convertHu2Mm=F,nt=2,m
 #' @importFrom RcppML nmf
 #' @import utils
 #' @import pointr
+#' @import msigdbr
 #' @export
-runScGSEA <- function(data,gmt.file,nsim=10000,convertToEns=T,convertHu2Mm=F,nt=2,minSize=15,maxSize=Inf,verbose=TRUE,seed=180582,nmf.k=100,fdr.th=0.05,gp=0,rescale="none")
+runScGSEA <- function(data,geneID,species,category,subcategory=NULL,pathway.list=NULL,nsim=10000,nt=0,minSize=15,maxSize=Inf,verbose=TRUE,seed=180582,nmf.k=100,fdr.th=0.05,gp=0,rescale="none")
 {
+  if(nt==0) {nt=detectCores()}
+  #species = base::match.arg(arg = species,choices = c("human","mouse"),several.ok = F)
+  geneID = base::match.arg(arg = geneID,choices = c("ensamble","symbol"),several.ok = F)
   rescale = base::match.arg(arg = rescale,choices = c("none","byGS","byCell"),several.ok = F)
   options(RcppML.threads = nt)
   use.for.nmf="gficf"
@@ -214,7 +220,16 @@ runScGSEA <- function(data,gmt.file,nsim=10000,convertToEns=T,convertHu2Mm=F,nt=
   }
   
   tsmessage("Loading pathways...",verbose=verbose)
-  data$scgsea$pathways = gmtPathways(gmt.file,convertToEns,convertHu2Mm,verbose)
+  if (!is.list(pathway.list)) {
+    gs = msigdbr::msigdbr(species = species, category = category,subcategory = subcategory)
+    if (geneID=="symbol") {
+      data$scgsea$pathways = split(x = gs$gene_symbol, f = gs$gs_name)
+    } else {
+      data$scgsea$pathways = split(x = gs$ensembl_gene, f = gs$gs_name)
+    }
+  } else {
+    data$scgsea$pathways = pathway.list; rm(pathway.list)
+  }
   data$scgsea$es = Matrix::Matrix(data = 0,nrow = length(data$scgsea$pathways),ncol = ncol(data$scgsea$nmf.w))
   data$scgsea$nes = Matrix::Matrix(data = 0,nrow = length(data$scgsea$pathways),ncol = ncol(data$scgsea$nmf.w))
   data$scgsea$pval = Matrix::Matrix(data = 0,nrow = length(data$scgsea$pathways),ncol = ncol(data$scgsea$nmf.w))
@@ -223,6 +238,8 @@ runScGSEA <- function(data,gmt.file,nsim=10000,convertToEns=T,convertHu2Mm=F,nt=
   rownames(data$scgsea$es) = rownames(data$scgsea$nes) = rownames(data$scgsea$pval) = rownames(data$scgsea$fdr) = names(data$scgsea$pathways)
   
   tsmessage("Performing GSEA...",verbose=verbose)
+  oldw <- getOption("warn")
+  options(warn = -1)
   pb = utils::txtProgressBar(min = 0, max = ncol(data$scgsea$nmf.w), initial = 0,style = 3) 
   for (i in 1:ncol(data$scgsea$nmf.w))
   {
@@ -234,6 +251,7 @@ runScGSEA <- function(data,gmt.file,nsim=10000,convertToEns=T,convertHu2Mm=F,nt=
       utils::setTxtProgressBar(pb,i)
   }
   base::close(pb)
+  on.exit(options(warn = oldw))
   
   ix = is.na(data$scgsea$nes)
   if(sum(ix)>0) {
