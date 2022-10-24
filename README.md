@@ -13,8 +13,9 @@ non-negative matrix factorization [RcppML](https://github.com/zdebruine/RcppML) 
 
 **Examples & Functionality**:  
 * [Getting Started](https://htmlpreview.github.io/?https://github.com/gambalab/gficf/blob/master/inst/doc/index.html)  
-* Single-cell Gene Set Enrichement Analysis (scGSEA) (coming soon..)  
+* [Single-cell Gene Set Enrichement Analysis (scGSEA)](https://htmlpreview.github.io/?https://github.com/gambalab/gficf/blob/master/inst/doc/scGSEA.html)  
 * [Single-cell Mapper (scMAP)](https://htmlpreview.github.io/?https://github.com/gambalab/gficf/blob/master/inst/doc/scMAP.html)  
+* Batch Effect Correction (Cooming soon) 
 
 
 # Installation
