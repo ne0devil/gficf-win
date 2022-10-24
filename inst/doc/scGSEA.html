@@ -10,7 +10,6 @@
 
 
 
-<meta name="date" content="2022-10-22" />
 
 <title>Single-cell Gene Set Enrichement Analysis</title>
 
@@ -700,7 +699,7 @@ function toggle_visibility(id1) {
 <h1 class="title toc-ignore">Single-cell Gene Set Enrichement Analysis</h1>
 <p class="author-name">Gennaro Gambardella<span class="affil-mark">1</span></p>
 <p class="author-affiliation"><span class="affil-mark">1</span>TIGEM (Telethon Institute of Genetics and Medicine)</p>
-<h4 class="date">22 October 2022</h4>
+<h4 class="date">24 ottobre 2022</h4>
 <h4 class="package">Package</h4>
 <p>gficf 2.0.0</p>
 
@@ -717,7 +716,7 @@ function toggle_visibility(id1) {
 <ul>
 <li><a href="#where-are-my-inferred-pathway-activity-levels" id="toc-where-are-my-inferred-pathway-activity-levels"><span class="toc-section-number">4.1</span> Where are my inferred pathway activity levels?</a></li>
 <li><a href="#how-many-factors-of-nmf-i-have-to-use-for-scgsea" id="toc-how-many-factors-of-nmf-i-have-to-use-for-scgsea"><span class="toc-section-number">4.2</span> How many factors of NMF I have to use for scGSEA?</a></li>
-<li><a href="#how-can-i-use-a-custom-gene-set-list" id="toc-how-can-i-use-a-custom-gene-set-list"><span class="toc-section-number">4.3</span> How can I use a custom gene set list?</a></li>
+<li><a href="#how-can-i-use-a-custom-gene-set-list-for-scgsea" id="toc-how-can-i-use-a-custom-gene-set-list-for-scgsea"><span class="toc-section-number">4.3</span> How can I use a custom gene set list for scGSEA?</a></li>
 <li><a href="#where-is-the-cell-graph-produced-by-phenograph" id="toc-where-is-the-cell-graph-produced-by-phenograph"><span class="toc-section-number">4.4</span> Where is the cell graph produced by phenograph?</a></li>
 </ul></li>
 <li><a href="#session-info" id="toc-session-info">Session info</a></li>
@@ -814,7 +813,7 @@ Figure 1: <span class="caption-title">UMAP Plot</span><br>UMAP plot of the small
 </div>
 <div id="cluster-cells-by-pathways-activity-levels" class="section level1" number="3">
 <h1><span class="header-section-number">3</span> Cluster cells by pathway’s activity levels</h1>
-<p>Now that we have reconstructed pathway’s activity at single cell level we can try to cluster cell according to that. <code>gficf</code> package implement phenograph algorithm. Phenograph is a clustering method designed for high-dimensional single-cell data analysis. It works by first creating a graph (“network”) that represents phenotypic similarities among cells by calculating the Jaccard coefficient between nearest-neighbor sets, and then identifying communities using the <a href="https://sites.google.com/site/findcommunities/">Louvain method</a> in the recostructed graph.</p>
+<p>Now that we have reconstructed pathway’s activity at single cell level we can try to cluster cell according to that. <code>gficf</code> package implement phenograph algorithm. Phenograph is a clustering method designed for high-dimensional single-cell data analysis. It works by first creating a graph (“network”) that represents phenotypic similarities among cells by calculating the Jaccard coefficient between nearest-neighbor sets, and then identifying communities using the <a href="https://sites.google.com/site/findcommunities/">Louvain method</a> in the reconstructed graph. Results are stored into the column <code>cluster.by.scGSEA</code> of the cell metadata data.frame <code>data$embedded</code>.</p>
 <pre class="r"><code>&gt; # Cluster cells with phenograph method but using
 &gt; # estimate cells pathway&#39;s activity levels
 &gt; data = clustcellsBYscGSEA(data,
@@ -852,13 +851,13 @@ Figure 1: <span class="caption-title">UMAP Plot</span><br>UMAP plot of the small
 <h2><span class="header-section-number">4.2</span> How many factors of NMF I have to use for scGSEA?</h2>
 <p>scGSEA is a tool that leverages NMF expression latent factors to infer pathway activity at a single cell level. Thus, by design, it inherits both benefits and limitations of the NMF model. A well know limit of this model, like other matrix decomposition techniques, is the choice of the exact number of factors to use. We generally recommend using at least 100 NMF factors on a large dataset comprising more than 10,000 cells, otherwise 50 should suffice.</p>
 </div>
-<div id="how-can-i-use-a-custom-gene-set-list" class="section level2" number="4.3">
-<h2><span class="header-section-number">4.3</span> How can I use a custom gene set list?</h2>
+<div id="how-can-i-use-a-custom-gene-set-list-for-scgsea" class="section level2" number="4.3">
+<h2><span class="header-section-number">4.3</span> How can I use a custom gene set list for scGSEA?</h2>
 <p>If you want to use a custom list of gene sets you can pass it trough the parameter <code>pathway.list</code> of <code>runScGSEA()</code> function. Name of each element of this list <strong>must be unique</strong> and must represents the name of the pathway.</p>
 </div>
 <div id="where-is-the-cell-graph-produced-by-phenograph" class="section level2" number="4.4">
 <h2><span class="header-section-number">4.4</span> Where is the cell graph produced by phenograph?</h2>
-<p>The cell graph produced by phenograph algorithm is stored into the <code>data$scgsea$cell.graph</code> igraph object. That can be then plotted and manipulated with any other network package. Here we use <a href="https://www.bioconductor.org/packages/release/bioc/html/netbiov.html"><code>netbiov</code></a> package to visualize this network. Remember that in this weighted network the edge weights represents similarities among cells in terms of jaccard coefficients (i.e., they are not distances), so remember to transform these similarities into distances before to apply the minimum spanning tree (MST) algorithm on this network (see example below).</p>
+<p>The cell graph produced by phenograph algorithm is stored into the <code>data$scgsea$cell.graph</code> igraph object while identified cell communities into the column <code>cluster.by.scGSEA</code> of the cell metadata data.frame <code>data$embedded</code>. That graph can be then plotted and manipulated with any network package supporting igraph objects. Here, for example, we use <a href="https://www.bioconductor.org/packages/release/bioc/html/netbiov.html"><code>netbiov</code></a> package to visualize this network. Remember that in this weighted network the <strong>edge weights represents similarities among cells</strong> in terms of jaccard coefficients (i.e., they are not distances), so remember to transform these similarities into distances before to apply the minimum spanning tree (MST) algorithm or any other graph theory method that use distances (see example below).</p>
 <pre class="r"><code>&gt; require(igraph)
 &gt; 
 &gt; # Extract the graph and print infos
@@ -907,97 +906,27 @@ Figure 2: <span class="caption-title">Cell Network</span><br>The cell network re
 ## 
 ## locale:
 ##  [1] LC_CTYPE=en_US.UTF-8       LC_NUMERIC=C              
-##  [3] LC_TIME=en_US.UTF-8        LC_COLLATE=en_US.UTF-8    
-##  [5] LC_MONETARY=en_US.UTF-8    LC_MESSAGES=en_US.UTF-8   
-##  [7] LC_PAPER=en_US.UTF-8       LC_NAME=C                 
+##  [3] LC_TIME=it_IT.UTF-8        LC_COLLATE=en_US.UTF-8    
+##  [5] LC_MONETARY=it_IT.UTF-8    LC_MESSAGES=en_US.UTF-8   
+##  [7] LC_PAPER=it_IT.UTF-8       LC_NAME=C                 
 ##  [9] LC_ADDRESS=C               LC_TELEPHONE=C            
-## [11] LC_MEASUREMENT=en_US.UTF-8 LC_IDENTIFICATION=C       
+## [11] LC_MEASUREMENT=it_IT.UTF-8 LC_IDENTIFICATION=C       
 ## 
 ## attached base packages:
 ## [1] stats     graphics  grDevices utils     datasets  methods   base     
 ## 
 ## other attached packages:
-## [1] netbiov_1.30.0   igraph_1.3.5     msigdbr_7.5.1    ggplot2_3.3.6   
-## [5] Matrix_1.5-1     gficf_2.0.0      RcppML_0.5.4     BiocStyle_2.24.0
+## [1] BiocStyle_2.24.0
 ## 
 ## loaded via a namespace (and not attached):
-##   [1] AnnotationHub_3.4.0           fastmatch_1.1-3              
-##   [3] BiocFileCache_2.4.0           RcppEigen_0.3.3.9.2          
-##   [5] plyr_1.8.7                    lazyeval_0.2.2               
-##   [7] GSEABase_1.58.0               splines_4.2.1                
-##   [9] BiocParallel_1.30.4           GenomeInfoDb_1.32.4          
-##  [11] sva_3.44.0                    digest_0.6.30                
-##  [13] ensembldb_2.20.2              htmltools_0.5.3              
-##  [15] fansi_1.0.3                   magrittr_2.0.3               
-##  [17] memoise_2.0.1                 ScaledMatrix_1.4.1           
-##  [19] pointr_0.2.0                  limma_3.52.4                 
-##  [21] Biostrings_2.64.1             annotate_1.74.0              
-##  [23] RcppParallel_5.1.5            matrixStats_0.62.0           
-##  [25] prettyunits_1.1.1             colorspace_2.0-3             
-##  [27] blob_1.2.3                    rappdirs_0.3.3               
-##  [29] ggrepel_0.9.1                 xfun_0.34                    
-##  [31] dplyr_1.0.10                  crayon_1.5.2                 
-##  [33] RCurl_1.98-1.9                jsonlite_1.8.3               
-##  [35] graph_1.74.0                  genefilter_1.78.0            
-##  [37] survival_3.4-0                glue_1.6.2                   
-##  [39] gtable_0.3.1                  zlibbioc_1.42.0              
-##  [41] XVector_0.36.0                leiden_0.4.3                 
-##  [43] DelayedArray_0.22.0           BiocSingular_1.12.0          
-##  [45] Rhdf5lib_1.18.2               SingleCellExperiment_1.18.1  
-##  [47] BiocGenerics_0.42.0           HDF5Array_1.24.2             
-##  [49] scales_1.2.1                  edgeR_3.38.4                 
-##  [51] DBI_1.1.3                     Rcpp_1.0.9                   
-##  [53] xtable_1.8-4                  progress_1.2.2               
-##  [55] reticulate_1.26               bit_4.0.4                    
-##  [57] rsvd_1.0.5                    stats4_4.2.1                 
-##  [59] GSVA_1.44.5                   httr_1.4.4                   
-##  [61] fgsea_1.22.0                  ellipsis_0.3.2               
-##  [63] pkgconfig_2.0.3               XML_3.99-0.11                
-##  [65] uwot_0.1.14                   sass_0.4.2                   
-##  [67] dbplyr_2.2.1                  locfit_1.5-9.6               
-##  [69] utf8_1.2.2                    reshape2_1.4.4               
-##  [71] tidyselect_1.2.0              rlang_1.0.6                  
-##  [73] later_1.3.0                   AnnotationDbi_1.58.0         
-##  [75] munsell_0.5.0                 BiocVersion_3.15.2           
-##  [77] tools_4.2.1                   cachem_1.0.6                 
-##  [79] cli_3.4.1                     generics_0.1.3               
-##  [81] RSQLite_2.2.18                evaluate_0.17                
-##  [83] stringr_1.4.1                 fastmap_1.1.0                
-##  [85] yaml_2.3.6                    babelgene_22.9               
-##  [87] knitr_1.40                    bit64_4.0.5                  
-##  [89] KEGGREST_1.36.3               AnnotationFilter_1.20.0      
-##  [91] nlme_3.1-160                  sparseMatrixStats_1.8.0      
-##  [93] mime_0.12                     xml2_1.3.3                   
-##  [95] biomaRt_2.52.0                compiler_4.2.1               
-##  [97] rstudioapi_0.14               filelock_1.0.2               
-##  [99] curl_4.3.3                    png_0.1-7                    
-## [101] interactiveDisplayBase_1.34.0 tibble_3.1.8                 
-## [103] bslib_0.4.0                   stringi_1.7.8                
-## [105] RSpectra_0.16-1               GenomicFeatures_1.48.4       
-## [107] lattice_0.20-45               ProtGenerics_1.28.0          
-## [109] vctrs_0.4.2                   pillar_1.8.1                 
-## [111] lifecycle_1.0.3               rhdf5filters_1.8.0           
-## [113] BiocManager_1.30.18           jquerylib_0.1.4              
-## [115] RcppAnnoy_0.0.19              cowplot_1.1.1                
-## [117] data.table_1.14.4             bitops_1.0-7                 
-## [119] irlba_2.3.5.1                 httpuv_1.6.6                 
-## [121] rtracklayer_1.56.1            GenomicRanges_1.48.0         
-## [123] R6_2.5.1                      BiocIO_1.6.0                 
-## [125] bookdown_0.29                 promises_1.2.0.1             
-## [127] gridExtra_2.3                 IRanges_2.30.1               
-## [129] codetools_0.2-18              KernelKnn_1.1.4              
-## [131] MASS_7.3-58.1                 assertthat_0.2.1             
-## [133] rhdf5_2.40.0                  SummarizedExperiment_1.26.1  
-## [135] rjson_0.2.21                  withr_2.5.0                  
-## [137] GenomicAlignments_1.32.1      Rsamtools_2.12.0             
-## [139] harmony_0.1.0                 S4Vectors_0.34.0             
-## [141] GenomeInfoDbData_1.2.8        mgcv_1.8-41                  
-## [143] parallel_4.2.1                hms_1.1.2                    
-## [145] grid_4.2.1                    beachmat_2.12.0              
-## [147] rmarkdown_2.17                DelayedMatrixStats_1.18.2    
-## [149] MatrixGenerics_1.8.1          Rtsne_0.16                   
-## [151] Biobase_2.56.0                shiny_1.7.2                  
-## [153] restfulr_0.0.15</code></pre>
+##  [1] bookdown_0.29       digest_0.6.30       R6_2.5.1           
+##  [4] jsonlite_1.8.3      magrittr_2.0.3      evaluate_0.17      
+##  [7] stringi_1.7.8       cachem_1.0.6        rlang_1.0.6        
+## [10] cli_3.4.1           rstudioapi_0.14     jquerylib_0.1.4    
+## [13] bslib_0.4.0         rmarkdown_2.17      tools_4.2.1        
+## [16] stringr_1.4.1       xfun_0.34           yaml_2.3.6         
+## [19] fastmap_1.1.0       compiler_4.2.1      BiocManager_1.30.18
+## [22] htmltools_0.5.3     knitr_1.40          sass_0.4.2</code></pre>
 </div>
 
 
