@@ -33,7 +33,7 @@ data <- gficf( M = small_BC_atlas)
 data <- runPCA(data = data,dim = 10,use.odgenes = T)
 
 # Create t-UMAP space
-data <-runReduction(data = data,reduction = "tumap",nt = 2,verbose = T,n_neighbors=150)
+data <-runReduction(data = data,reduction = "umap",nt = 2,verbose = T,n_neighbors=150)
 
 # Cell meta-data can stored in the data$embedded data.frame
 # Let' add the info about the cell-line, stripping this information
