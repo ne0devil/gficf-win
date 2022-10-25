@@ -6,6 +6,7 @@
 \usage{
 clustcellsBYscGSEA(
   data,
+  method = "fgraph",
   pca = NULL,
   k = 10,
   resolution = 0.25,
@@ -19,15 +20,17 @@ clustcellsBYscGSEA(
 \arguments{
 \item{data}{list; Input data (gficf object)}
 
-\item{pca}{numeric; If different from NULL data are reduced using pca component before to apply clustering algorithm (highly suggested when phenograph methos is choosen).}
+\item{method}{character; Method used to produce the cell network, such as phenograph or fgraph.}
 
-\item{k}{integer; number of nearest neighbours (default:15) (used only used if method is phenograph)}
+\item{pca}{numeric; If different from NULL data are reduced using pca component before to apply clustering algorithm.}
 
-\item{resolution}{Value of the resolution parameter, use a value above (below) 1.0 if you want to obtain a larger (smaller) number of communities. (used only used if method is phenograph)}
+\item{k}{integer; number of nearest neighbours (default:10).}
 
-\item{n.start}{Number of random starts (used only used if method is phenograph).}
+\item{resolution}{Value of the resolution parameter, use a value above (below) 1.0 if you want to obtain a larger (smaller) number of communities.}
 
-\item{n.iter}{Maximal number of iterations per random start (used only used if method is phenograph).}
+\item{n.start}{Number of random starts.}
+
+\item{n.iter}{Maximal number of iterations per random start.}
 
 \item{nt}{integer; Number of cpus to use for k-nn search. If zero all cpu are used.}
 

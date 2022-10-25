@@ -162,25 +162,26 @@ RunModularityClustering <- function(SNN = matrix(), modularity = 1, resolution =
 #' 
 #' 
 #' @param data list; Input data (gficf object)
-#' @param pca numeric; If different from NULL data are reduced using pca component before to apply clustering algorithm (highly suggested when phenograph methos is choosen).
-#' @param k integer; number of nearest neighbours (default:15) (used only used if method is phenograph)
-#' @param resolution Value of the resolution parameter, use a value above (below) 1.0 if you want to obtain a larger (smaller) number of communities. (used only used if method is phenograph)
-#' @param n.start Number of random starts (used only used if method is phenograph).
-#' @param n.iter Maximal number of iterations per random start (used only used if method is phenograph).
+#' @param method character; Method used to produce the cell network, such as phenograph or fgraph.
+#' @param pca numeric; If different from NULL data are reduced using pca component before to apply clustering algorithm.
+#' @param k integer; number of nearest neighbours (default:10).
+#' @param resolution Value of the resolution parameter, use a value above (below) 1.0 if you want to obtain a larger (smaller) number of communities.
+#' @param n.start Number of random starts.
+#' @param n.iter Maximal number of iterations per random start.
 #' @param nt integer; Number of cpus to use for k-nn search. If zero all cpu are used.
 #' @param seed integer; Seed to use for replication.
 #' @param verbose logical; Increase verbosity.
 #' @return the updated gficf object
-#' @importFrom  igraph graph.data.frame
+#' @importFrom  igraph graph.data.frame graph.adjacency
 #' @importFrom RcppParallel setThreadOptions RcppParallelLibs
 #' @import uwot
+#' @importFrom irlba irlba
 #' @import Matrix
 #' @export
-clustcellsBYscGSEA <- function(data,pca=NULL,k=10, resolution = 0.25, n.start = 50, n.iter = 250, nt=0, verbose=T, seed=180582)
+clustcellsBYscGSEA <- function(data,method="fgraph",pca=NULL,k=10, resolution = 0.25, n.start = 50, n.iter = 250, nt=0, verbose=T, seed=180582)
 {
-  method="phenograph"
   if (is.null(data$scgsea)) {stop("Run first runScGSEA function")}
-  method = base::match.arg(arg = method,choices = c("phenograph","hierarchical"),several.ok = F)
+  method = base::match.arg(arg = method,choices = c("phenograph","fgraph"),several.ok = F)
   
   nt=detectCores()
   
@@ -196,7 +197,7 @@ clustcellsBYscGSEA <- function(data,pca=NULL,k=10, resolution = 0.25, n.start = 
     }
     
     if (ncol(x)>100) {
-      neigh = uwot:::find_nn(x,k=k,include_self = F,n_threads = nt,verbose = verbose,method = "annoy",metric="manhattan")$idx
+      neigh = uwot:::find_nn(x,k=k,include_self = F,n_threads = nt,verbose = verbose,method = "annoy",metric="manhattan",n_trees = 100)$idx
     } else {
       neigh = uwot:::find_nn(x,k=k,include_self = F,n_threads = nt,verbose = verbose,method = "fnn",metric="manhattan")$idx
     }
@@ -222,31 +223,26 @@ clustcellsBYscGSEA <- function(data,pca=NULL,k=10, resolution = 0.25, n.start = 
     u = base::unique(cluster.map)
     data$scgsea$cluster.gsea.mu = base::sapply(u, function(x,y=t(data$scgsea$x),z=cluster.map) Matrix::rowMeans(y[,z%in%x]))
     tsmessage(paste("Detected Clusters:",length(unique(data$embedded$cluster))),verbose = verbose)
-  } else {
-    x = data$scgsea$x
-    
-    if (!is.null(pca)) {
-      x <- irlba::irlba(A = x,nv=pca,center = Matrix::rowMeans(t(x)))
-      x <- x$u %*% diag(x$d)
-      rownames(x) <- rownames(data$scgsea$x)
-    }
-    
-    tsmessage("Computing Correlation ...",verbose = verbose)
-    if(nrow(x)>10000) {
-      pcc = gficf:::armaCorr(m = as.matrix(t(x)),ncores = nt,verbose = verbose,full = T,diag = T,dist = F)
-      rownames(pcc) = colnames(pcc) = rownames(x)
-    } else {
-      pcc = cor(as.matrix(t(x)))
-    }
-    rm(x)
-    tsmessage("Computing Manhattan Dist ...",verbose = verbose)
-    d = gficf:::armaManhattan(m = Matrix(pcc,sparse = T),ncores = nt,verbose = T,full = T,diag = T)
-    rownames(d) = colnames(d) = colnames(pcc); rm(pcc)
-    d <- as.dist(d)
-    
-    tsmessage("Computing Dendogram ...",verbose = verbose)
-    data$scgsea$h.dendo = hclust(d,method = "ward.D2"); rm(d)
   }
+  
+  if (method=="fgraph") {
+    g = uwot::umap(X = as.matrix(data$scgsea$x),n_neighbors = k,metric = "manhattan",scale = "Z",n_trees = 100,pca = pca,ret_extra = "fgraph",n_threads = nt,verbose = verbose)$fgraph
+    g <- igraph::graph.adjacency(adjmatrix = g, mode = "undirected",weighted = TRUE,diag = F)
+    
+    tsmessage("Performing louvain with modularity optimization...",verbose = verbose)
+    community <- RunModularityClustering(igraph::as_adjacency_matrix(g,attr = "weight",sparse = T),1,resolution,2,n.start,n.iter,seed,verbose)
+    community = community + 1
+    data$embedded$cluster.by.scGSEA = as.character(community)
+    data$scgsea$cell.graph=g; rm(g)
+    
+    # get centroid of clusters
+    tsmessage("Computing Cluster Signatures...",verbose = verbose)
+    cluster.map = data$embedded$cluster.by.scGSEA
+    u = base::unique(cluster.map)
+    data$scgsea$cluster.gsea.mu = base::sapply(u, function(x,y=t(data$scgsea$x),z=cluster.map) Matrix::rowMeans(y[,z%in%x]))
+    tsmessage(paste("Detected Clusters:",length(unique(data$embedded$cluster))),verbose = verbose)
+  }
+  
   gc()
   return(data)
 }

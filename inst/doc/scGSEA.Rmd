@@ -75,14 +75,15 @@ data = runScGSEA(data = data,
 ```
 
 # Cluster cells by pathway's activity levels
-Now that we have reconstructed pathway's activity at single cell level we can try to cluster cell according to that. `gficf` package implement phenograph algorithm. Phenograph is a clustering method designed for high-dimensional single-cell data analysis. It works by first creating a graph ("network") that represents phenotypic similarities among cells by calculating the Jaccard coefficient between nearest-neighbor sets, and then identifying communities using the [Louvain method](https://sites.google.com/site/findcommunities/) in the reconstructed graph. Results are stored into the column `cluster.by.scGSEA` of the cell metadata data.frame `data$embedded`.  
+Now that we have reconstructed pathway's activity at single cell level we can try to cluster cell according to these values. To transform cells into a graph `gficf` package uses UMAP (i.e., the fuzzy graph produced by umap) or the phenograph algorithm. More information about how UMAP constructs a high dimensional graph representation of the data can be found [HERE](https://pair-code.github.io/understanding-umap/). Phenograph is instead a clustering method designed for high-dimensional single-cell data analysis. It works by first creating a graph ("network") that represents phenotypic similarities among cells by calculating the Jaccard coefficient between nearest-neighbor sets, and then identifying communities using the [Louvain method](https://sites.google.com/site/findcommunities/) in the reconstructed graph. Results are stored into the column `cluster.by.scGSEA` of the cell metadata data.frame `data$embedded`.  
 
 ```{r clust, fig.cap="",echo=TRUE,cache=TRUE,warning=FALSE,message=FALSE,prompt=TRUE,results='hide'}
 # Cluster cells with phenograph method but using
 # estimate cells pathway's activity levels
 data = clustcellsBYscGSEA(data,
+                          method = "fgraph",
                           pca = 10,
-                          k = 8,
+                          k = 10,
                           resolution = .05,
                           n.start = 10,
                           n.iter = 50,
@@ -110,17 +111,18 @@ scGSEA is a tool that leverages NMF expression latent factors to infer pathway a
 ## How can I use a custom gene set list for scGSEA?
 If you want to use a custom list of gene sets you can pass it trough the parameter `pathway.list` of `runScGSEA()` function. Name of each element of this list **must be unique** and must represents the name of the pathway.
 
-## Where is the cell graph produced by phenograph?
-The cell graph produced by phenograph algorithm is stored into the `data$scgsea$cell.graph` igraph object while identified cell communities into the column `cluster.by.scGSEA` of the cell metadata data.frame `data$embedded`. That graph can be then plotted and manipulated with any network package supporting igraph objects. Here, for example, we use [`netbiov`](https://www.bioconductor.org/packages/release/bioc/html/netbiov.html) package to visualize this network. Remember that in this weighted network the **edge weights represents similarities among cells** in terms of jaccard coefficients (i.e., they are not distances), so remember to transform these similarities into distances before to apply the minimum spanning tree (MST) algorithm or any other graph theory method that use distances (see example below).
+## Where is the cell graph produced by phenograph or UMAP?
+The cell graph produced by UMAP (or phenograph) algorithm is stored into the `data$scgsea$cell.graph` igraph object, while the identified cell communities into the column `cluster.by.scGSEA` of the cell metadata data.frame `data$embedded`. That graph can be then plotted and manipulated with any network package supporting igraph objects. Here, for example, we use [`netbiov`](https://www.bioconductor.org/packages/release/bioc/html/netbiov.html) package to visualize this network. Remember that in this weighted network the **edge weights represents similarities among cells** in terms of probability (for UMAP) or jaccard coefficients for phenograph (i.e., they are not distances). Thus, remember to transform these similarities into distances before to apply the minimum spanning tree (MST) algorithm or any other graph theory method that use distances.
 
 ```{r stats,cache=TRUE,warning=FALSE,message=FALSE,prompt=TRUE}
 require(igraph)
 
-# Extract the graph and print infos
+# Extract the graph and print info
 g = data$scgsea$cell.graph
 
 # Transform similarities into distances
-E(g)$weight <- 1 -E(g)$weight
+# you have to use MST
+# E(g)$weight <- 1 - E(g)$weight
 
 # simplify the network
 g = igraph::simplify(g,edge.attr.comb = "min")
@@ -128,20 +130,17 @@ g = igraph::simplify(g,edge.attr.comb = "min")
 # print the network stats
 summary(g)
 ```
-```{r graph, fig.cap="Cell Network. The cell network reconstructed by phenograph using the reconstructed pathway's activity levels in each cell. Bolder edges are edges along the MST path.",echo=TRUE,cache=TRUE,warning=FALSE,message=FALSE,prompt=TRUE,results='hide'}
+```{r graph, fig.cap="Cell Network. The cell network reconstructed by UMAP using the reconstructed pathway's activity levels in each cell.",echo=TRUE,cache=TRUE,warning=FALSE,message=FALSE,prompt=TRUE,results='hide'}
 require(netbiov)
 
 # Plot the network (bolder edges are MST edges)
 hc <- rgb(t(col2rgb(heat.colors(20)))/255,alpha=.2)
 cl <- rgb(r=0, b=.7, g=1, alpha=.05)
-xx <- mst.plot.mod(g,
-                   vertex.color=cl,
-                   v.size=3,
-                   sf=-20,
-                   colors=hc,
-                   e.size=.5,
-                   mst.e.size=.75,
-                   layout.function=layout.fruchterman.reingold)
+xx <- plot.modules(g,
+                   color.random=TRUE,
+                   v.size=1,
+                   layout.function=layout.graphopt)
+
 ```
 
 # Session info {.unnumbered}
