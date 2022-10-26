@@ -699,7 +699,7 @@ function toggle_visibility(id1) {
 <h1 class="title toc-ignore">Single-cell Mapper</h1>
 <p class="author-name">Gennaro Gambardella<span class="affil-mark">1</span></p>
 <p class="author-affiliation"><span class="affil-mark">1</span>TIGEM (Telethon Institute of Genetics and Medicine)</p>
-<h4 class="date">20 ottobre 2022</h4>
+<h4 class="date">26 ottobre 2022</h4>
 <h4 class="package">Package</h4>
 <p>gficf 2.0.0</p>
 
@@ -805,7 +805,7 @@ Figure 2: <span class="caption-title">UMAP of referece BC Atlas and mapped cells
 </div>
 <div id="how-to-contextualize-mapped-cells" class="section level1" number="3">
 <h1><span class="header-section-number">3</span> How to contextualize mapped cells</h1>
-<p>Finally we can use KNN to classify and thus contextualize mapped cells into the reference atlas. In this example we try to infer cell-line of origin of each mapped for wich we got a classification accuracy of 93.23%. Specifically, this task can be performed by the function <code>classify.cells()</code> of <code>gficf</code> package in which the class of reference cells must be specified by the <code>classes</code> parameter. Here we use as class of each cell its cell-line of origin. Classification results are stored into <code>data$embedded.predicted</code> data.frame where the column <code>predicted.class</code> reports the predicted class and the column <code>class.prob</code> its predicted probability.</p>
+<p>Finally we can use KNN to classify and thus contextualize mapped cells into the reference atlas. In this example we try to infer cell-line of origin of each mapped cell for winch. After the mapping we also compute the classification accuracy that is for this example of 93.23%. Specifically, mapping task can be performed with the function <code>classify.cells()</code> of <code>gficf</code> package. In this function the class of reference cells must be specified by the <code>classes</code> parameter. Here we use as class of each cell its cell-line of origin. Classification results are stored into <code>data$embedded.predicted</code> data.frame where the column <code>predicted.class</code> reports the predicted class and the column <code>class.prob</code> its predicted probability.</p>
 <p>The <code>classify.cells()</code> function is built on top of <a href="https://github.com/mlampros/KernelKnn"><code>KernelKnn</code></a> package and thus implement several measures to compute the distances among cells that can be specified trough the <code>knn_method</code> parameter. At the same time the parameter <code>knn_weights_fun</code> can be used to specify the kernel function to use for cell classification. Default is <code>knn_weights_fun = NULL</code> that correspond the to <a href="https://en.wikipedia.org/wiki/K-nearest_neighbors_algorithm">unweighted KNN algorithm</a>. For further details on possible kernel functions to use, plese see this <a href="http://mlampros.github.io/2016/07/10/KernelKnn/">blog-post</a> of original <code>KernelKnn</code> package.</p>
 <pre class="r"><code>&gt; # Step 3. Cell classification with KNN.
 &gt; data = classify.cells(data = data,
@@ -861,12 +861,12 @@ Figure 2: <span class="caption-title">UMAP of referece BC Atlas and mapped cells
 ## [1] BiocStyle_2.24.0
 ## 
 ## loaded via a namespace (and not attached):
-##  [1] bookdown_0.29       digest_0.6.29       R6_2.5.1           
-##  [4] jsonlite_1.8.2      magrittr_2.0.3      evaluate_0.17      
+##  [1] bookdown_0.29       digest_0.6.30       R6_2.5.1           
+##  [4] jsonlite_1.8.3      magrittr_2.0.3      evaluate_0.17      
 ##  [7] stringi_1.7.8       cachem_1.0.6        rlang_1.0.6        
 ## [10] cli_3.4.1           rstudioapi_0.14     jquerylib_0.1.4    
 ## [13] bslib_0.4.0         rmarkdown_2.17      tools_4.2.1        
-## [16] stringr_1.4.1       xfun_0.33           yaml_2.3.5         
+## [16] stringr_1.4.1       xfun_0.34           yaml_2.3.6         
 ## [19] fastmap_1.1.0       compiler_4.2.1      BiocManager_1.30.18
 ## [22] htmltools_0.5.3     knitr_1.40          sass_0.4.2</code></pre>
 </div>
