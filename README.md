@@ -73,5 +73,5 @@ if (!requireNamespace("BiocManager", quietly = TRUE)) {install.packages("BiocMan
 BiocManager::install(setdiff(c("sva","edgeR", "fgsea"),rownames(installed.packages())),update = F)
 
 if(!require(devtools)){ install.packages("devtools")}
-devtools::install_github("dibbelab/gficf")
+devtools::install_github("gambalab/gficf")
 ```
