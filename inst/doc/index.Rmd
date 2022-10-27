@@ -12,6 +12,16 @@ vignette: |
   %\VignetteEncoding{UTF-8}
 ---
 
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-XD8QKTWJ1D"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-XD8QKTWJ1D');
+</script>
+
 # Getting started with `gficf` package
 
 Welcome to GF-ICF! `gficf` is an R package for normalization, visualization and analysis of of single-cell RNA sequencing data, based on a data transformation model called term frequency–inverse document frequency [(TF-IDF)](https://en.wikipedia.org/wiki/Tf%E2%80%93idf), which has been extensively used in the field of text mining. This vignette gives an overview and introduction to `gficf`’s functionality.  

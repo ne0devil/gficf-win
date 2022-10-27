@@ -12,6 +12,16 @@ vignette: |
   %\VignetteEncoding{UTF-8}
 ---
 
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-XD8QKTWJ1D"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-XD8QKTWJ1D');
+</script>
+
 # Introduction {.unnumbered}
 
 Single-cell Mapper (scMAP) is a transfer learning algorithm that combines text mining data transformation and a k-nearest neighbours’ (KNN) classifier to map a query set of single-cell transcriptional profiles on top of a reference atlas. scMAP consists of three main steps:  
