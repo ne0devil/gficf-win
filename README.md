@@ -4,7 +4,7 @@ An R implementation of the
 Gene Frequency - Inverse Cell Frequency method for single cell data
 normalization originally described into [Gambardella et al. 2019](https://www.frontiersin.org/articles/10.3389/fgene.2019.00734/abstract).  
 
-***Novel functionality*** implemented into the version 2 of GFICF package can be found in the preprint [Pellecchia et al. 2022](https://www.biorxiv.org/content/10.1101/2022.10.24.513476v1)  
+***New functionalities*** implemented into the version 2 of GFICF package can be found in the preprint [Pellecchia et al. 2022](https://www.biorxiv.org/content/10.1101/2022.10.24.513476v1)  
 
 The package also includes [Phenograph](https://biorxiv.org/cgi/content/short/2022.10.24.513476v1)
 [Louvain method](https://sites.google.com/site/findcommunities/)
