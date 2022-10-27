@@ -34,7 +34,7 @@ You need gsl dev library to successfully install RcppGSL library.
 On Ubuntu/Debian systems this can be accomplished by running from terminal the command 
 
 ```bash
-sudo apt-get install libgsl-dev libcurl4-openssl-dev libssl-dev libxml2-dev`
+sudo apt-get install libgsl-dev libcurl4-openssl-dev libssl-dev libxml2-dev
 ```
 
 ## Mac OS X
