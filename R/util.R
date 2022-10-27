@@ -353,4 +353,37 @@ armaRowSum <- function(M,nt=0,verbose=FALSE) {
   return(armaColSum(t(M),nt,verbose))
 }
 
+#' @param M A sparse matrix from the Matrix package.
+#' @param dir The directori in which to write the files. 
+Write10X = function(M,dir) {
+  if (!dir.exists(paths = dir)) {
+    dir.create(path = dir,showWarnings = F,recursive = T)
+  } 
+  writeMMgz(x = M,file = paste0(dir,"/matrix.mtx.gz"))
+  write.table(x = rownames(M),file = gzfile(paste0(dir,"/features.tsv.gz")),col.names = F,row.names = F)
+  write.table(x = colnames(M),file = gzfile(paste0(dir,"/barcodes.tsv.gz")),col.names = F,row.names = F)
+}
 
+#' @param x A sparse matrix from the Matrix package.
+#' @param file A filename that ends in ".gz".
+writeMMgz <- function(x, file) {
+  mtype <- "real"
+  if (is(x, "ngCMatrix")) {
+    mtype <- "integer"
+  }
+  writeLines(
+    c(
+      sprintf("%%%%MatrixMarket matrix coordinate %s general", mtype),
+      sprintf("%s %s %s", x@Dim[1], x@Dim[2], length(x@x))
+    ),
+    gzfile(file)
+  )
+  data.table::fwrite(
+    x = summary(x),
+    file = file,
+    append = TRUE,
+    sep = " ",
+    row.names = FALSE,
+    col.names = FALSE
+  )
+}
