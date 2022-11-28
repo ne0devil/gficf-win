@@ -37,6 +37,7 @@ runNMF = function(data,dim=NULL,seed=180582,use.odgenes=F,n.odgenes=NULL,plot.od
 
   if(use.odgenes) {
     overD=suppressWarnings(findOverDispersed(data = data,alpha = 0.1,verbose = F,plot = plot.odgenes))
+    overD$lpa[is.na(overD$lpa)] <- 0
     odgenes <- rownames(overD[overD$lpa<log(0.1),])
     if(!is.null(n.odgenes)) {
       if(n.odgenes>length(odgenes)) {
@@ -105,6 +106,7 @@ runPCA = function(data,dim=NULL,var.scale=F,centre=F,seed=180582,use.odgenes=F,n
 
   if(use.odgenes) {
     overD=suppressWarnings(findOverDispersed(data = data,alpha = 0.1,verbose = F,plot = plot.odgenes))
+    overD$lpa[is.na(overD$lpa)] <- 0
     odgenes <- rownames(overD[overD$lpa<log(0.1),])
     if(!is.null(n.odgenes)) {
       if(n.odgenes>length(odgenes)) {
