@@ -217,8 +217,8 @@ runScGSEA <- function(data,geneID,species,category,subcategory=NULL,pathway.list
     }
   } else {
     tsmessage("Found a previous scGSEA, thus the already computed NMF will be used",verbose=T)
-    tsmessage("If you want to recompute NMF, please call resetScGSEA first!",verbose=T)
-    ata$scgsea$es <- NULL
+    tsmessage("If you want to recompute NMF, please call resetScGSEA first",verbose=T)
+    data$scgsea$es <- NULL
     data$scgsea$nes <- NULL
     data$scgsea$pval <- NULL
     data$scgsea$fdr <- NULL
