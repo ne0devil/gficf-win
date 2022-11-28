@@ -216,7 +216,15 @@ runScGSEA <- function(data,geneID,species,category,subcategory=NULL,pathway.list
       rm(tmp);gc()
     }
   } else {
-    stop("Found a previous scGSEA please call resetScGSEA first!")
+    tsmessage("Found a previous scGSEA, thus the already computed NMF will be used",verbose=T)
+    tsmessage("If you want to recompute NMF, please call resetScGSEA first!",verbose=T)
+    ata$scgsea$es <- NULL
+    data$scgsea$nes <- NULL
+    data$scgsea$pval <- NULL
+    data$scgsea$fdr <- NULL
+    data$scgsea$pathways <- NULL
+    data$scgsea$x <- NULL
+    data$scgsea$stat <- NULL
   }
   
   tsmessage("Loading pathways...",verbose=verbose)
