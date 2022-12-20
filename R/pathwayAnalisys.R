@@ -186,7 +186,7 @@ runScGSEA <- function(data,geneID,species,category,subcategory=NULL,pathway.list
     data$scgsea = list()
     if (use.for.nmf=="gficf")
     {
-      if (data$pca$type == "NMF"){
+      if (!is.null(data$pca) && data$pca$type == "NMF"){
         if (data$dimPCA<nmf.k || data$pca$use.odgenes) {
           tsmessage("... Performing NMF",verbose=verbose)
           tmp = RcppML::nmf(data = data$gficf,k=nmf.k)
