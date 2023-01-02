@@ -20,7 +20,8 @@ runScGSEA(
   nmf.k = 100,
   fdr.th = 0.05,
   gp = 0,
-  rescale = "none"
+  rescale = "none",
+  normalization = "gficf"
 )
 }
 \arguments{
@@ -53,6 +54,8 @@ runScGSEA(
 \item{fdr.th}{numeric; FDR threshold for GSEA.}
 
 \item{rescale}{string; If different by none, pathway's activity scores are resealed as Z-score. Possible values are none, byGS or byCell. Default is none.}
+
+\item{normalization;}{normalization to use before to apply NMF. Possible values are gficf or cpm. Default and highly raccomanded is gficf.}
 }
 \value{
 The updated gficf object.

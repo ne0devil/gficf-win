@@ -163,6 +163,7 @@ runGSEA <- function(data,gmt.file,nsim=1000,convertToEns=T,convertHu2Mm=F,nt=2,m
 #' @param nmf.k numeric; Rank of NMF.
 #' @param fdr.th numeric; FDR threshold for GSEA.
 #' @param rescale string; If different by none, pathway's activity scores are resealed as Z-score. Possible values are none, byGS or byCell. Default is none.
+#' @param normalization; normalization to use before to apply NMF. Possible values are gficf or cpm. Default and highly raccomanded is gficf.
 #' @return The updated gficf object.
 #' @importFrom fgsea fgsea
 #' @import fastmatch
@@ -170,21 +171,22 @@ runGSEA <- function(data,gmt.file,nsim=1000,convertToEns=T,convertHu2Mm=F,nt=2,m
 #' @import utils
 #' @import pointr
 #' @import msigdbr
+#' @importFrom BiocParallel SnowParam
 #' @export
-runScGSEA <- function(data,geneID,species,category,subcategory=NULL,pathway.list=NULL,nsim=10000,nt=0,minSize=15,maxSize=Inf,verbose=TRUE,seed=180582,nmf.k=100,fdr.th=0.05,gp=0,rescale="none")
+runScGSEA <- function(data,geneID,species,category,subcategory=NULL,pathway.list=NULL,nsim=10000,nt=0,minSize=15,maxSize=Inf,verbose=TRUE,seed=180582,nmf.k=100,fdr.th=0.05,gp=0,rescale="none",normalization="gficf")
 {
   if(nt==0) {nt=detectCores()}
   #species = base::match.arg(arg = species,choices = c("human","mouse"),several.ok = F)
   geneID = base::match.arg(arg = geneID,choices = c("ensamble","symbol"),several.ok = F)
   rescale = base::match.arg(arg = rescale,choices = c("none","byGS","byCell"),several.ok = F)
+  normalization = base::match.arg(arg = normalization,choices = c("gficf","cpm"),several.ok = F)
   options(RcppML.threads = nt)
-  use.for.nmf="gficf"
   set.seed(seed)
   
   if (is.null(data$scgsea))
   {
     data$scgsea = list()
-    if (use.for.nmf=="gficf")
+    if (normalization=="gficf")
     {
       if (!is.null(data$pca) && data$pca$type == "NMF"){
         if (data$dimPCA<nmf.k || data$pca$use.odgenes) {
@@ -248,10 +250,15 @@ runScGSEA <- function(data,geneID,species,category,subcategory=NULL,pathway.list
   tsmessage("Performing GSEA...",verbose=verbose)
   oldw <- getOption("warn")
   options(warn = -1)
-  pb = utils::txtProgressBar(min = 0, max = ncol(data$scgsea$nmf.w), initial = 0,style = 3) 
+  pb = utils::txtProgressBar(min = 0, max = ncol(data$scgsea$nmf.w), initial = 0,style = 3)
+  
+  # Optimize fgsea cpus assigning at least 100 pathways for cpus
+  nt_fgsea <- ceiling(length(data$scgsea$pathways)/100)
+  nt_fgsea <- ifelse(nt_fgsea>nt,nt,nt_fgsea)
+  bpparameters <- BiocParallel::SnowParam(nt_fgsea)
   for (i in 1:ncol(data$scgsea$nmf.w))
   {
-      df = as.data.frame(fgsea::fgseaMultilevel(pathways = data$scgsea$pathways,stats = data$scgsea$nmf.w[,i],nPermSimple = nsim,gseaParam = gp,nproc = nt,minSize = minSize,maxSize = maxSize))[,1:7]
+      df = as.data.frame(fgsea::fgseaMultilevel(pathways = data$scgsea$pathways,stats = data$scgsea$nmf.w[,i],nPermSimple = nsim,gseaParam = gp,BPPARAM = bpparameters,minSize = minSize,maxSize = maxSize))[,1:7]
       data$scgsea$es[df$pathway,i] = df$ES
       data$scgsea$nes[df$pathway,i] = df$NES
       data$scgsea$pval[df$pathway,i] = df$pval
