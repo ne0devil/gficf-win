@@ -77,7 +77,7 @@ scMAP = function(data,x,nt=2,seed=18051982, normalize=TRUE,verbose=TRUE)
   
   if (data$pca$type=="NMF") {
     cells = colnames(x)
-    x = t(predict.nmf(w = data$pca$genes,data = x))
+    x = t(predict.nmf(w = data$pca$genes,data = x[rownames(data$pca$genes),]))
     rownames(x) = cells
   } else {
     x = t(x[rownames(data$pca$genes),]) %*% data$pca$genes
