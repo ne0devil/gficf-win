@@ -36,11 +36,10 @@ gficf = function(M=NULL,QCdata=NULL,cell_count_cutoff=5,cell_percentage_cutoff2=
   
   data = normCountsData(data,cell_count_cutoff,cell_percentage_cutoff2,nonz_mean_cutoff,normalize,batches,groups,verbose,filterGenes, ...)
   data$gficf = tf(data$rawCounts,verbose = verbose)
+  if (!storeRaw) {data$rawCounts=NULL;data$counts=NULL;gc()}
   data$w = getIdfW(data$gficf,verbose = verbose)
   data$gficf = idf(data$gficf,data$w,verbose = verbose)
   data$gficf = t(l.norm(t(data$gficf),norm = "l2",verbose = verbose))
-  colnames(data$gficf) <- colnames(data$rawCounts)
-  if (!storeRaw) {data$rawCounts=NULL;data$counts=NULL;gc()}
   
   data$param <- list()
   data$param$cell_count_cutoff = cell_count_cutoff
@@ -156,8 +155,11 @@ l.norm = function (m, norm = c("l1", "l2"),verbose)
   tsmessage(paste("Apply",norm),verbose = verbose)
   norm_vec = switch(norm, l1 = 1/armaRowSum(m), l2 = 1/sqrt(armaRowSum(m^2)))
   norm_vec[is.infinite(norm_vec)] = 0
-  if (inherits(m, "sparseMatrix")) 
-    Diagonal(x = norm_vec) %*% m
+  if (inherits(m, "sparseMatrix")) {
+    norm_vec <- Diagonal(x = norm_vec)
+    rownames(norm_vec) <- rownames(m)
+    m <- norm_vec %*% m
+  }
   else m * norm_vec
 }
 
