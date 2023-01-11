@@ -36,10 +36,11 @@ gficf = function(M=NULL,QCdata=NULL,cell_count_cutoff=5,cell_percentage_cutoff2=
   
   data = normCountsData(data,cell_count_cutoff,cell_percentage_cutoff2,nonz_mean_cutoff,normalize,batches,groups,verbose,filterGenes, ...)
   data$gficf = tf(data$rawCounts,verbose = verbose)
-  if (!storeRaw) {data$rawCounts=NULL;data$counts=NULL;gc()}
   data$w = getIdfW(data$gficf,verbose = verbose)
   data$gficf = idf(data$gficf,data$w,verbose = verbose)
   data$gficf = t(l.norm(t(data$gficf),norm = "l2",verbose = verbose))
+  colnames(data$gficf) <- colnames(data$rawCounts)
+  if (!storeRaw) {data$rawCounts=NULL;data$counts=NULL;gc()}
   
   data$param <- list()
   data$param$cell_count_cutoff = cell_count_cutoff
