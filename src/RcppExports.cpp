@@ -152,7 +152,7 @@ BEGIN_RCPP
 END_RCPP
 }
 
-RcppExport SEXP detectCoresCpp();
+RcppExport SEXP detectCoresCpp(void);
 
 static const R_CallMethodDef CallEntries[] = {
     {"_gficf_RunModularityClusteringCpp", (DL_FUNC) &_gficf_RunModularityClusteringCpp, 9},

@@ -37,7 +37,7 @@ Please read the manuscript for additional details and estimated performances of 
 # Building the reference atlas
 For this tutorial, we will be using as a reference atlas the `small_BC_atlas dataset` included in the `gficf` package (Figure \@ref(fig:atlas)). This dataset is a small version (comprising only 4,760 cells) of the Breast cancer cell-line atlas we recently published ([Gambardella et al.](https://www.nature.com/articles/s41467-022-29358-6)). 
 
-```{r atlas, fig.cap="UMAP of referece BC Atlas. UMAP plot of the small_BC_atlas dataset where cells are color-coded according to their cell-line of origin.",echo=TRUE,cache=TRUE,warning=FALSE,message=F,prompt=T,results='hide'}
+```{r atlas, fig.cap="UMAP of referece BC Atlas. UMAP plot of the small_BC_atlas dataset where cells are color-coded according to their cell-line of origin.",echo=TRUE,cache=TRUE,warning=FALSE,message=F,prompt=FALSE,results='hide'}
 require(gficf)
 require(ggplot2)
 
@@ -82,7 +82,7 @@ plot(p)
 
 After we have built our reference atlas (Figure \@ref(fig:atlas)), we use the 930 cells available into the `test_BC_atlas` dataset to test our mapping algorithm (Figure \@ref(fig:map)). Mapping of new cells into the embedded space of the reference atlas is performed by the `scMAP()` function. Metadata and coordinate of new mapped cells are stored into `data$embedded.predicted` data.frame.
 
-```{r map, fig.cap="UMAP of referece BC Atlas and mapped cells. UMAP plot of the small_BC_atlas dataset where cells are color-coded according to their cell-line of origin. Black points are the 930 mapped cells contained in the test_BC_atlas dataset",echo=TRUE,cache=TRUE,warning=FALSE,message=F,prompt=T,results='hide'}
+```{r map, fig.cap="UMAP of referece BC Atlas and mapped cells. UMAP plot of the small_BC_atlas dataset where cells are color-coded according to their cell-line of origin. Black points are the 930 mapped cells contained in the test_BC_atlas dataset",echo=TRUE,cache=TRUE,warning=FALSE,message=F,prompt=FALSE,results='hide'}
 
 # Step 2. Map new cells into reference atlas.
 # 2.1 Load the new cells to map
@@ -111,7 +111,7 @@ Finally we can use KNN to classify and thus contextualize mapped cells into the 
 
 The `classify.cells()` function is built on top of [`KernelKnn`](https://github.com/mlampros/KernelKnn) package and thus implement several measures to compute the distances among cells that can be specified trough the `knn_method` parameter. At the same time the parameter `knn_weights_fun` can be used to specify the kernel function to use for cell classification. Default is `knn_weights_fun = NULL` that correspond the to [unweighted KNN algorithm](https://en.wikipedia.org/wiki/K-nearest_neighbors_algorithm). For further details on possible kernel functions to use, plese see this [blog-post](http://mlampros.github.io/2016/07/10/KernelKnn/) of original `KernelKnn` package.
 
-```{r classify, echo=TRUE,cache=TRUE,warning=FALSE,message=F,prompt=T}
+```{r classify, echo=TRUE,cache=TRUE,warning=FALSE,message=F,prompt=FALSE}
 
 # Step 3. Cell classification with KNN.
 data = classify.cells(data = data,
@@ -124,7 +124,7 @@ data = classify.cells(data = data,
 head(data$embedded.predicted)
 ```
 
-```{r performance, echo=TRUE,cache=TRUE,warning=FALSE,prompt=T}
+```{r performance, echo=TRUE,cache=TRUE,warning=FALSE,prompt=FALSE}
 
 # Strip from cell name the cell-line
 # of origin of each mapped cell

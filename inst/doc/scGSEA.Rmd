@@ -29,7 +29,7 @@ single-cell Gene Set Enrichment Analysis (scGSEA) is a bioinformatic method that
 # Data Normalization and Visualization
 For this tutorial, we will be using as a reference atlas the `small_BC_atlas dataset` included in the `gficf` package (Figure \@ref(fig:atlas)). This dataset is a small version (comprising only 4,760 cells) of the Breast cancer cell-line atlas we recently published ([Gambardella et al.](https://www.nature.com/articles/s41467-022-29358-6)).
 
-```{R atlas, fig.cap="UMAP Plot. UMAP plot of the small_BC_atlas dataset after cells have been normalized with GF-ICF model. Cell are color coded according to thei cell line of origin.",echo=TRUE,cache=TRUE,warning=FALSE,message=FALSE,prompt=TRUE,results='hide'}
+```{R atlas, fig.cap="UMAP Plot. UMAP plot of the small_BC_atlas dataset after cells have been normalized with GF-ICF model. Cell are color coded according to thei cell line of origin.",echo=TRUE,cache=TRUE,warning=FALSE,message=FALSE,prompt=FALSE,results='hide'}
 require(gficf)
 require(ggplot2)
 
@@ -66,19 +66,19 @@ plot(p)
 # Performing scGSEA
 Single cell gene set enrichment analysis is performed by the function `runScGSEA()` of `gficf` package. All available gene sets from [msigdb database](http://www.gsea-msigdb.org/gsea/msigdb/collections.jsp). The list of gene setes to use can can be specified trough the `category` parameter. Here we access to msigdb gene set collection through [`msigdbr`](https://cran.r-project.org/web/packages/msigdbr/vignettes/msigdbr-intro.html) package (see it for further details).
 
-```{r collecion,cache=TRUE,warning=FALSE,message=FALSE,prompt=TRUE}
+```{r collecion,cache=TRUE,warning=FALSE,message=FALSE,prompt=FALSE}
 require(msigdbr)
 
 # Show supported gene sets colections
 print(msigdbr::msigdbr_collections(),n=30)
 ```
-```{r scgsea, cache=TRUE, warning=FALSE,message=FALSE,prompt=TRUE,results='hide'}
+```{r scgsea, cache=TRUE, warning=FALSE,message=FALSE,prompt=FALSE,results='hide'}
 # Run scGSEA using 50 hallmarks genes
 data = runScGSEA(data = data,
                  geneID = "ensamble",
                  species = "human",
                  category = "H",
-                 nmf.k = 50,
+                 nmf.k = 100,
                  fdr.th = .1,
                  rescale = "none",
                  verbose = T)
@@ -87,7 +87,7 @@ data = runScGSEA(data = data,
 # Cluster cells by pathway's activity levels
 Now that we have reconstructed pathway's activity at single cell level we can try to cluster cell according to these values. To transform cells into a graph `gficf` package uses UMAP (i.e., the fuzzy graph produced by umap) or the phenograph algorithm. More information about how UMAP constructs a high dimensional graph representation of the data can be found [HERE](https://pair-code.github.io/understanding-umap/). Phenograph is instead a clustering method designed for high-dimensional single-cell data analysis. It works by first creating a graph ("network") that represents phenotypic similarities among cells by calculating the Jaccard coefficient between nearest-neighbor sets, and then identifying communities using the [Louvain method](https://sites.google.com/site/findcommunities/) in the reconstructed graph. Results are stored into the column `cluster.by.scGSEA` of the cell metadata data.frame `data$embedded`.  
 
-```{r clust, fig.cap="",echo=TRUE,cache=TRUE,warning=FALSE,message=FALSE,prompt=TRUE,results='hide'}
+```{r clust, fig.cap="",echo=TRUE,cache=TRUE,warning=FALSE,message=FALSE,prompt=FALSE,results='hide'}
 # Cluster cells with phenograph method but using
 # estimate cells pathway's activity levels
 data = clustcellsBYscGSEA(data,
@@ -111,12 +111,12 @@ plot(p)
 ## Where are my inferred pathway activity levels?
 Reconstructed pathway's activity levels in each cell are stored in the matrix `data$scgsea$x`. In this matrix rows are cells while columns are pathways.
 
-```{r head,cache=TRUE,warning=FALSE,message=FALSE,prompt=TRUE}
+```{r head,cache=TRUE,warning=FALSE,message=FALSE,prompt=FALSE}
 head(data$scgsea$x[,1:2])
 ```
 
 ## How many factors of NMF I have to use for scGSEA?
-scGSEA is a tool that leverages NMF expression latent factors to infer pathway activity at a single cell level. Thus, by design, it inherits both benefits and limitations of the NMF model. A well know limit of this model, like other matrix decomposition techniques, is the choice of the exact number of factors to use. We generally recommend using at least 100 NMF factors on a large dataset comprising more than 10,000 cells, otherwise 50 should suffice.
+scGSEA is a tool that leverages NMF expression latent factors to infer pathway activity at a single cell level. Thus, by design, it inherits both benefits and limitations of the NMF model. A well know limit of this model, like other matrix decomposition techniques, is the choice of the exact number of factors to use. We generally recommend using at least 100 NMF factors.
 
 ## How can I use a custom gene set list for scGSEA?
 If you want to use a custom list of gene sets you can pass it trough the parameter `pathway.list` of `runScGSEA()` function. Name of each element of this list **must be unique** and must represents the name of the pathway.
@@ -124,7 +124,7 @@ If you want to use a custom list of gene sets you can pass it trough the paramet
 ## Where is the cell graph produced by phenograph or UMAP?
 The cell graph produced by UMAP (or phenograph) algorithm is stored into the `data$scgsea$cell.graph` igraph object, while the identified cell communities into the column `cluster.by.scGSEA` of the cell metadata data.frame `data$embedded`. That graph can be then plotted and manipulated with any network package supporting igraph objects. Here, for example, we use [`netbiov`](https://www.bioconductor.org/packages/release/bioc/html/netbiov.html) package to visualize this network. Remember that in this weighted network the **edge weights represents similarities among cells** in terms of probability (for UMAP) or jaccard coefficients for phenograph (i.e., they are not distances). Thus, remember to transform these similarities into distances before to apply the minimum spanning tree (MST) algorithm or any other graph theory method that use distances.
 
-```{r stats,cache=TRUE,warning=FALSE,message=FALSE,prompt=TRUE}
+```{r stats,cache=TRUE,warning=FALSE,message=FALSE,prompt=FALSE}
 require(igraph)
 
 # Extract the graph and print info
@@ -140,7 +140,7 @@ g = igraph::simplify(g,edge.attr.comb = "min")
 # print the network stats
 summary(g)
 ```
-```{r graph, fig.cap="Cell Network. The cell network reconstructed by UMAP using the reconstructed pathway's activity levels in each cell.",echo=TRUE,cache=TRUE,warning=FALSE,message=FALSE,prompt=TRUE,results='hide'}
+```{r graph, fig.cap="Cell Network. The cell network reconstructed by UMAP using the reconstructed pathway's activity levels in each cell.",echo=TRUE,cache=TRUE,warning=FALSE,message=FALSE,prompt=FALSE,results='hide'}
 require(netbiov)
 
 # Plot the network (bolder edges are MST edges)
