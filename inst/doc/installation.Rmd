@@ -37,7 +37,7 @@ On Ubuntu/Debian systems this can be accomplished by running from terminal the c
 sudo apt-get install libgsl-dev libcurl4-openssl-dev libssl-dev libxml2-dev
 ```
 
-## Mac OS X
+## Mac OS X (Not Officially Supported)
 
 1.2.1 Open terminal and run `xcode-select --install` to install the command line developer tools.
 
@@ -79,6 +79,10 @@ if (!requireNamespace("BiocManager", quietly = TRUE)) {
 }
 
 BiocManager::install(setdiff(c("sva","edgeR", "fgsea"),rownames(installed.packages())),update = F)
+
+# We rquire RcppML package from github (not the cran version)
+if("RcppML" %in% rownames(installed.packages())) {remove.packages("RcppML")}
+devtools::install_github("zdebruine/RcppML")
 
 # Install gficf from github
 if(!require(devtools)){ install.packages("devtools")}
